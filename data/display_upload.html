@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Display Bild-Upload</title>
+<style>
+  :root { 
+    --bg: #0f172a; 
+    --card: #1e293b; 
+    --acc: #38bdf8; 
+    --txt: #f8fafc; 
+    --txt-dim: #94a3b8;
+    --border: #334155;
+  }
+  body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--txt); padding: 15px; margin: 0; line-height: 1.5; }
+  .container { max-width: 640px; margin: 0 auto; padding-bottom: 40px;}
+  
+  nav { display: flex; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-bottom: 25px; }
+  nav a { color: var(--acc); text-decoration: none; font-weight: 600; padding: 8px 12px; border-radius: 6px; background: rgba(56, 189, 248, 0.1); transition: background 0.2s; }
+  nav a:hover { background: rgba(56, 189, 248, 0.2); }
+  
+  h1 { text-align: center; margin-bottom: 5px; }
+  .subtitle { text-align: center; color: var(--txt-dim); font-size: 0.9rem; margin-bottom: 30px; }
+  
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+  
+  label { display: block; color: var(--txt-dim); font-size: 0.9rem; font-weight: 600; margin-top: 15px; margin-bottom: 5px; }
+  input[type=text] { width: 100%; padding: 12px; background: #0b1120; color: #fff; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; font-size: 1rem; transition: border-color 0.2s;}
+  input[type=text]:focus { outline: none; border-color: var(--acc); }
+  
+  .file-box { border: 2px dashed var(--border); padding: 15px; border-radius: 8px; background: rgba(0,0,0,0.15); margin-top: 5px; transition: border-color 0.2s;}
+  .file-box:hover { border-color: var(--acc); }
+  input[type=file] { width: 100%; color: var(--txt-dim); }
+  input[type=file]::file-selector-button { background: var(--border); color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-right: 15px; transition: background 0.2s; }
+  input[type=file]::file-selector-button:hover { background: #475569; }
+  
+  input[type=range] { width: 100%; margin-top: 5px; accent-color: var(--acc); }
+  
+  button { background: var(--acc); color: #000; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px; font-size: 1rem; transition: background 0.2s, transform 0.1s;}
+  button:hover { background: #0284c7; color: #fff; }
+  button:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; }
+  button.sec { background: var(--border); color: #fff; font-weight: 600; margin-top: 0; }
+  button.sec:hover { background: #475569; }
+  
+  #preview_box { text-align: center; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 8px; margin-top: 20px;}
+  
+  /* Das Canvas ist intern 140x90, wird über CSS aber auf 280x180 gestreckt für bessere Bedienung */
+  canvas { 
+    border: 2px solid var(--acc); border-radius: 4px; 
+    width: 280px; height: 180px; display: block; margin: 15px auto; 
+    background: #000; cursor: grab; touch-action: none; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  }
+  canvas:active { cursor: grabbing; }
+  
+  #status { margin-top: 15px; padding: 15px; border-radius: 8px; font-size: 0.95rem; white-space: pre-wrap; display: none; font-weight: 500; }
+  .ok  { background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid #10b981; }
+  .err { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid #ef4444; }
+  .inf { background: rgba(56, 189, 248, 0.1); color: #7dd3fc; border: 1px solid var(--acc); }
+  
+  #bar { width: 100%; height: 16px; background: #0b1120; border-radius: 8px; margin-top: 15px; overflow: hidden; display: none; border: 1px solid var(--border); }
+  #fill{ height: 100%; width: 0%; background: var(--acc); transition: width 0.3s ease; }
+  
+  .slot-row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .slot-row button { flex: 1; min-width: 90px; }
+  
+  hr { border: none; border-top: 1px solid var(--border); margin: 25px 0; }
+  .dim { color: var(--txt-dim); font-size: 0.85rem; }
+  .highlight { color: var(--acc); font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="container">
+  <nav>
+    <a href="/settings">&larr; Zurück zu den Settings</a>
+  </nav>
+  
+  <h1>&#128444; Display Upload</h1>
+  <p class="subtitle">Bilder zuschneiden und als LVGL (.bin) hochladen.</p>
+
+  <div class="card">
+    <label>Display IP-Adresse</label>
+    <input type="text" id="ip" placeholder="z.B. 192.168.1.50" value="">
+
+    <label style="margin-top:20px">Bild auswählen (JPG / PNG)</label>
+    <div class="file-box">
+      <input type="file" id="file_in" accept=".jpg,.jpeg,.png,.bmp,.gif,.webp">
+    </div>
+
+    <div id="preview_box" style="display:none">
+      <div class="dim"><span class="highlight">Bild ziehen</span> um den Ausschnitt zu wählen (140x90).</div>
+      
+      <canvas id="preview" width="140" height="90"></canvas>
+      
+      <div style="display:flex; gap:15px; align-items:center; text-align:left;">
+        <div style="flex:1;">
+          <label style="margin-top:0;">Zoom</label>
+          <input type="range" id="zoom" min="0.1" max="5" step="0.01" value="1">
+        </div>
+        <div style="flex:1;">
+          <label style="margin-top:0;">Helligkeit: <span id="bright_val" style="color:var(--txt);">0</span></label>
+          <input type="range" id="brightness" min="-100" max="100" value="0">
+        </div>
+      </div>
+    </div>
+
+    <hr>
+    
+    <label>Auf welchen Slot hochladen?</label>
+    <div class="slot-row">
+      <button class="sec" onclick="convert('drink0')">Getränk 1</button>
+      <button class="sec" onclick="convert('drink1')">Getränk 2</button>
+      <button class="sec" onclick="convert('drink2')">Getränk 3</button>
+    </div>
+    <button class="sec" style="margin-top:15px; background: rgba(255,255,255,0.05);" onclick="convertCustom()">Eigener Dateiname…</button>
+
+    <div id="bar"><div id="fill"></div></div>
+    <div id="status"></div>
+  </div>
+</div>
+
+<script>
+const W = 140;
+const H = 90;
+const cv = document.getElementById('preview');
+const ctx = cv.getContext('2d');
+
+let imgEl = null;
+let scale = 1;
+let panX = 0;
+let panY = 0;
+
+// Dragging State
+let isDragging = false;
+let lastX = 0;
+let lastY = 0;
+
+// Bild laden und initialisieren
+document.getElementById('file_in').addEventListener('change', function() {
+  const f = this.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    imgEl = new Image();
+    imgEl.onload = () => {
+      // Initiale Skalierung: Bild so klein machen, dass es komplett reinpasst
+      scale = Math.min(W / imgEl.width, H / imgEl.height);
+      
+      // Zoom-Slider dynamisch an das Bild anpassen
+      const zoomSlider = document.getElementById('zoom');
+      zoomSlider.min = scale * 0.2; // Rauszoomen erlaubt
+      zoomSlider.max = scale * 5;   // Bis zu 5x reinzoomen
+      zoomSlider.step = scale * 0.02;
+      zoomSlider.value = scale;
+      
+      // Bild mittig zentrieren
+      panX = (W - imgEl.width * scale) / 2;
+      panY = (H - imgEl.height * scale) / 2;
+      
+      document.getElementById('preview_box').style.display = 'block';
+      renderPreview();
+    };
+    imgEl.src = e.target.result;
+  };
+  reader.readAsDataURL(f);
+});
+
+// Zeichenfunktion (wendet Zoom, Position und Helligkeit an)
+function renderPreview() {
+  if(!imgEl) return;
+  
+  // 1. Hintergrund schwarz
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, W, H);
+  
+  // 2. Bild mit Zoom und Pan zeichnen
+  const drawW = imgEl.width * scale;
+  const drawH = imgEl.height * scale;
+  ctx.drawImage(imgEl, panX, panY, drawW, drawH);
+
+  // 3. Helligkeit anwenden
+  const bri = parseInt(document.getElementById('brightness').value);
+  document.getElementById('bright_val').textContent = bri > 0 ? '+'+bri : bri;
+  
+  if(bri !== 0) {
+    const id = ctx.getImageData(0, 0, W, H);
+    const d = id.data;
+    for(let i=0; i<d.length; i+=4) {
+      d[i]   = Math.min(255, Math.max(0, d[i]   + bri));
+      d[i+1] = Math.min(255, Math.max(0, d[i+1] + bri));
+      d[i+2] = Math.min(255, Math.max(0, d[i+2] + bri));
+    }
+    ctx.putImageData(id, 0, 0);
+  }
+}
+
+// --- Event Listener für Slider ---
+document.getElementById('zoom').addEventListener('input', e => {
+  const newScale = parseFloat(e.target.value);
+  // Damit der Zoom immer vom Zentrum des 140x90 Kastens ausgeht:
+  panX = (W/2) - ((W/2) - panX) * (newScale / scale);
+  panY = (H/2) - ((H/2) - panY) * (newScale / scale);
+  scale = newScale;
+  renderPreview();
+});
+
+document.getElementById('brightness').addEventListener('input', renderPreview);
+
+// --- Event Listener für Drag & Drop auf dem Canvas ---
+cv.addEventListener('pointerdown', e => {
+  if(!imgEl) return;
+  isDragging = true;
+  lastX = e.clientX;
+  lastY = e.clientY;
+  cv.setPointerCapture(e.pointerId);
+});
+
+cv.addEventListener('pointermove', e => {
+  if(!isDragging) return;
+  
+  // Da das Canvas über CSS doppelt so groß dargestellt wird (280x180), 
+  // müssen wir die Mausbewegung durch 2 teilen (Faktor 0.5)
+  const rect = cv.getBoundingClientRect();
+  const scaleFactor = W / rect.width; 
+  
+  panX += (e.clientX - lastX) * scaleFactor;
+  panY += (e.clientY - lastY) * scaleFactor;
+  
+  lastX = e.clientX;
+  lastY = e.clientY;
+  renderPreview();
+});
+
+cv.addEventListener('pointerup', e => isDragging = false);
+cv.addEventListener('pointercancel', e => isDragging = false);
+
+// Mausrad zum Zoomen im Canvas
+cv.addEventListener('wheel', e => {
+  if(!imgEl) return;
+  e.preventDefault(); // Verhindert Scrollen der Seite
+  
+  const zoomSlider = document.getElementById('zoom');
+  const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1; // Runter = raus, Hoch = rein
+  let newScale = scale * zoomFactor;
+  
+  if(newScale < parseFloat(zoomSlider.min)) newScale = parseFloat(zoomSlider.min);
+  if(newScale > parseFloat(zoomSlider.max)) newScale = parseFloat(zoomSlider.max);
+  
+  // Wo ist die Maus gerade? Dorthin zoomen!
+  const rect = cv.getBoundingClientRect();
+  const scaleFactor = W / rect.width;
+  const mouseX = (e.clientX - rect.left) * scaleFactor;
+  const mouseY = (e.clientY - rect.top) * scaleFactor;
+  
+  panX = mouseX - (mouseX - panX) * (newScale / scale);
+  panY = mouseY - (mouseY - panY) * (newScale / scale);
+  
+  scale = newScale;
+  zoomSlider.value = scale;
+  renderPreview();
+});
+
+
+// --- LVGL Konvertierung ---
+function buildLvglBin(ctx, W, H) {
+  const headerValue = (4) | (W << 10) | (H << 21);
+  const buffer = new ArrayBuffer(4 + (W * H * 2));
+  const view = new DataView(buffer);
+  
+  view.setUint32(0, headerValue, true); // Little Endian Header
+
+  const id = ctx.getImageData(0, 0, W, H);
+  const d  = id.data;
+  let offset = 4;
+  
+  for(let i=0; i<d.length; i+=4) {
+    const r = d[i];
+    const g = d[i+1];
+    const b = d[i+2];
+    const rgb565 = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+    view.setUint16(offset, rgb565, true); 
+    offset += 2;
+  }
+  return buffer;
+}
+
+async function convert(filename) {
+  if(!filename) return;
+  if(!imgEl) { alert('Bitte zuerst ein Bild auswählen!'); return; }
+  const ip = document.getElementById('ip').value.trim();
+  if(!ip) { alert('Bitte Display-IP eingeben!'); return; }
+
+  setStatus('inf', 'Konvertiere 140×90 → RGB565...');
+  showBar();
+
+  // Da unser sichtbares Canvas exakt den gewünschten 140x90 Pixeln mit 
+  // dem perfekten Ausschnitt und Helligkeit entspricht, können wir 
+  // einfach direkt den Inhalt des Canvas abgreifen!
+  const binBuffer = buildLvglBin(ctx, W, H);
+  const blob = new Blob([binBuffer], {type: 'application/octet-stream'});
+  const binFilename = filename + '.bin';
+
+  setStatus('inf', 'Lade hoch: ' + binFilename + ' (' + Math.round(binBuffer.byteLength/1024) + ' KB)...');
+  setFill(30);
+
+  const fd = new FormData();
+  fd.append('file', blob, binFilename);
+
+  try {
+    await fetch('http://' + ip + '/edit', {
+        method:'POST', 
+        body:fd,
+        mode: 'no-cors'
+    });
+    
+    setFill(100);
+    setStatus('ok', '✓ ' + binFilename + ' gesendet!');
+  } catch(e) {
+    setStatus('err', 'Verbindungsfehler: ' + e.message + '\n\nPrüfe ob die Display-IP korrekt ist und das Display im selben Netz ist.');
+  }
+}
+
+async function convertCustom() {
+  const name = prompt('Dateiname (ohne .bin):', 'meinbild');
+  if(name) await convert(name);
+}
+
+// UI Helfer
+function setStatus(cls, msg) {
+  const el = document.getElementById('status');
+  el.className = cls;
+  el.style.display = 'block';
+  el.textContent = msg;
+}
+function showBar() { document.getElementById('bar').style.display = 'block'; setFill(0); }
+function setFill(pct) { document.getElementById('fill').style.width = pct + '%'; }
+
+// IP vorausfuellen: localStorage hat Vorrang (manuell gespeichert),
+// danst Fallback auf displayIP aus /api/config (vom Display per UART gemeldet)
+fetch('/api/config').then(r=>r.json()).then(d=>{
+  const saved = localStorage.getItem('hasp_ip');
+  if(saved) document.getElementById('ip').value = saved;
+  else if(d.displayIP && d.displayIP.length > 6) document.getElementById('ip').value = d.displayIP;
+}).catch(()=>{
+  const saved = localStorage.getItem('hasp_ip');
+  if(saved) document.getElementById('ip').value = saved;
+});
+
+document.getElementById('ip').addEventListener('change', function(){
+  localStorage.setItem('hasp_ip', this.value.trim());
+});
+</script>
+</body>
+</html>

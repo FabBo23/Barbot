@@ -1,0 +1,390 @@
+<!DOCTYPE HTML>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>BarBot Setup</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root { 
+      --bg: #0f172a; 
+      --card: #1e293b; 
+      --acc: #38bdf8; 
+      --acc-hover: #0284c7;
+      --txt: #f8fafc; 
+      --txt-dim: #94a3b8;
+      --border: #334155;
+    }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      background: var(--bg); color: var(--txt); 
+      margin: 0; padding: 15px; 
+      line-height: 1.5;
+    }
+    .container { max-width: 700px; margin: 0 auto; padding-bottom: 40px; }
+    
+    /* Navigation */
+    nav { 
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+      background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-bottom: 25px;
+    }
+    nav a { 
+      color: var(--acc); text-decoration: none; font-weight: 600; 
+      padding: 8px 12px; border-radius: 6px; background: rgba(56, 189, 248, 0.1);
+      transition: background 0.2s;
+    }
+    nav a:hover { background: rgba(56, 189, 248, 0.2); }
+
+    h1 { text-align: center; color: var(--txt); margin-bottom: 30px; }
+    h3 { margin-top: 0; color: var(--acc); border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    
+    .card { 
+      background: var(--card); padding: 25px; border-radius: 16px; 
+      margin-bottom: 25px; border: 1px solid var(--border); 
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    label { display: block; margin-top: 15px; color: var(--txt-dim); font-size: 0.9rem; font-weight: 600; margin-bottom: 5px; }
+    
+    input[type=text], input[type=number], input[type=password] { 
+      width: 100%; padding: 12px; background: #0b1120; color: #fff; 
+      border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; 
+      font-size: 1rem; transition: border-color 0.2s;
+    }
+    input[type=text]:focus, input[type=number]:focus, input[type=password]:focus {
+      outline: none; border-color: var(--acc);
+    }
+
+    /* File Upload Styling */
+    .file-box {
+      border: 2px dashed var(--border); padding: 15px; border-radius: 8px;
+      background: rgba(0,0,0,0.15); margin-bottom: 10px; transition: border-color 0.2s;
+    }
+    .file-box:hover { border-color: var(--acc); }
+    input[type=file] { width: 100%; color: var(--txt-dim); font-size: 0.9rem; }
+    input[type=file]::file-selector-button {
+      background: var(--border); color: #fff; border: none; padding: 8px 16px;
+      border-radius: 6px; cursor: pointer; margin-right: 15px; transition: background 0.2s;
+    }
+    input[type=file]::file-selector-button:hover { background: #475569; }
+    
+    .preview-img { 
+      max-width: 100%; height: auto; max-height: 200px; object-fit: cover;
+      border-radius: 8px; margin-top: 10px; display: none; border: 1px solid var(--border);
+    }
+
+    /* Checkboxes */
+    .checkbox-row { display: flex; align-items: center; gap: 12px; margin-top: 15px; background: rgba(0,0,0,0.15); padding: 12px; border-radius: 8px;}
+    .checkbox-row label { margin: 0; color: #fff; font-size: 1rem; cursor: pointer; flex: 1;}
+    input[type=checkbox] { width: 22px; height: 22px; cursor: pointer; accent-color: var(--acc); }
+
+    /* Buttons */
+    .btn-save { 
+      background: #10b981; color: white; border: none; padding: 14px; 
+      border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px; 
+      font-weight: 600; font-size: 1.05rem; transition: all 0.2s; 
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); 
+    }
+    .btn-save:hover { background: #059669; transform: translateY(-2px); }
+
+    .btn-upload { background: transparent; border: 1px solid var(--acc); color: var(--acc); padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 5px; transition: background 0.2s; }
+    .btn-upload:hover { background: rgba(56, 189, 248, 0.1); }
+    
+    .danger-zone { border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.05); }
+    .btn-reset { background: transparent; color: #ef4444; border: 1px solid #ef4444; margin-top: 15px; width: 100%; padding: 14px; border-radius: 8px; cursor: pointer; font-weight: bold;}
+    .btn-reset:hover { background: rgba(239, 68, 68, 0.1); }
+    
+    hr { border: none; border-top: 1px solid var(--border); margin: 25px 0; }
+    .hint { color: var(--txt-dim); font-size: 0.85rem; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a href="/">&larr; BarBot</a>
+      <a href="/files">&#128196; Dateien</a>
+      <a href="/display_upload">&#128444; Display</a>
+      <a href="/ota">&#8635; Update</a>
+    </nav>
+    
+    <h1>⚙️ Setup & Einstellungen</h1>
+    
+    <div class="card">
+      <h3>Getränke Namen</h3>
+      <label>Pumpe 1 (Blau)</label><input type="text" id="d1">
+      <label>Pumpe 2 (Rot)</label><input type="text" id="d2">
+      <label>Pumpe 3 (Gelb)</label><input type="text" id="d3">
+      <button class="btn-save" onclick="save()">💾 Namen Speichern</button>
+    </div>
+
+    <div class="card">
+      <h3>Design & Bilder</h3>
+      
+      <label>Hintergrundbild (.jpg, .png)</label>
+      <div class="file-box">
+        <input type="file" id="bg_upload" accept=".jpg, .jpeg, .png">
+        <img id="prev_bg" class="preview-img">
+      </div>
+      <button class="btn-upload" onclick="uploadFile('bg', 'bg_upload')">Hintergrund Hochladen</button>
+      
+      <hr>
+      
+      <label>Bild für Getränk 1 (Blau)</label>
+      <div class="file-box">
+        <input type="file" id="d0_upload" accept=".jpg, .jpeg, .png">
+        <img id="prev_d0" class="preview-img">
+      </div>
+      <button class="btn-upload" onclick="uploadFile('d0', 'd0_upload')">Bild 1 Hochladen</button>
+
+      <label>Bild für Getränk 2 (Rot)</label>
+      <div class="file-box">
+        <input type="file" id="d1_upload" accept=".jpg, .jpeg, .png">
+        <img id="prev_d1" class="preview-img">
+      </div>
+      <button class="btn-upload" onclick="uploadFile('d1', 'd1_upload')">Bild 2 Hochladen</button>
+
+      <label>Bild für Getränk 3 (Gelb)</label>
+      <div class="file-box">
+        <input type="file" id="d2_upload" accept=".jpg, .jpeg, .png">
+        <img id="prev_d2" class="preview-img">
+      </div>
+      <button class="btn-upload" onclick="uploadFile('d2', 'd2_upload')">Bild 3 Hochladen</button>
+    </div>
+
+    <div class="card">
+      <h3>Netzwerk & MQTT</h3>
+      <div class="checkbox-row">
+          <input type="checkbox" id="men">
+          <label for="men">MQTT aktivieren</label>
+      </div>
+      
+      <div id="mqtt_settings" style="display:none; margin-top:15px;">
+          <label>Broker IP / Domain</label><input type="text" id="ms">
+          <label>Port</label><input type="number" id="mp">
+          <label>User</label><input type="text" id="mu">
+          <label>Passwort</label>
+          <input type="password" id="mwd" placeholder="Passwort eingeben">
+          
+          <!-- NEU: Explizite SSL/TLS Auswahl -->
+          <div class="checkbox-row" style="margin-top:15px; background:none; padding:0;">
+              <input type="checkbox" id="mtls">
+              <label for="mtls">SSL/TLS Verschlüsselung (Mqtts)</label>
+          </div>
+      </div>
+      <button class="btn-save" onclick="save()">💾 Netzwerk Speichern</button>
+    </div>
+    
+    <div class="card">
+      <h3>Hardware & CYD Anzeige</h3>
+      
+      <div class="checkbox-row">
+        <input type="checkbox" id="cyd_mode">
+        <label for="cyd_mode">Halbkreis-Ansicht aktivieren</label>
+      </div>
+      <div class="hint">Zeigt 12 Positionen als Halbkreis auf dem CYD-Display. Getränke können dort einzeln oder alle auf einmal zugewiesen werden.</div>
+
+      <div class="checkbox-row" style="margin-top:20px;">
+        <input type="checkbox" id="wifi_sync">
+        <label for="wifi_sync">WLAN-Daten ans Display übertragen</label>
+      </div>
+      <div class="hint">Sendet WLAN-Zugangsdaten per UART an das CYD-Display, damit es sich selbst verbindet.</div>
+
+      <label style="margin-top:25px;">Einschenkmenge pro Glas (cl)</label>
+      <input type="number" id="pour_time_cl" min="0.5" max="15" step="0.5">
+      <div class="hint">Standard: 2 cl. Kalibrierung unten anpassen falls Menge nicht stimmt.</div>
+      
+      <button class="btn-save" onclick="save()">💾 Hardware Speichern</button>
+    </div>
+
+    <div class="card">
+      <h3>&#9878; Kalibrierung & Flaschen</h3>
+
+      <label>Millisekunden pro Centiliter (ms/cl)</label>
+      <input type="number" id="msPerCl" min="500" max="10000" step="100" value="2000">
+      <div class="hint">Standard: 2000 ms = 1 cl. Zum Kalibrieren: Pumpe X Sekunden laufen lassen, Menge messen, dann <strong>ms/cl = Laufzeit&nbsp;ms &divide; gemessene&nbsp;cl</strong> eintragen. Beispiel: 4000ms → 2cl gemessen → 2000&nbsp;ms/cl.</div>
+      <button class="btn-save" onclick="saveCalibration()" style="background:#0284c7;">&#9655; Kalibrierung speichern</button>
+
+      <hr>
+
+      <div style="margin-bottom:8px; font-weight:600; color:var(--acc);">Flaschen-Mengenzähler</div>
+      <div id="bottle_container">
+        <div style="color:var(--txt-dim); text-align:center; padding:20px;">Lade...</div>
+      </div>
+    </div>
+
+    <div class="card danger-zone" style="margin-top: 40px;">
+      <h3 style="color: #ef4444; margin-top: 0; border-bottom-color: rgba(239, 68, 68, 0.3);">Gefahrenzone</h3>
+      <div class="hint" style="color: #fca5a5;">Achtung: Dies löscht alle hochgeladenen Bilder dauerhaft vom Gerät und setzt die Namen der Getränke auf Standardwerte zurück.</div>
+      <button class="btn-reset" onclick="resetNames()">Namen & Bilder unwiderruflich zurücksetzen</button>
+    </div>
+
+  </div>
+
+<script>
+  function setupPreview(inputId, imgId) {
+    document.getElementById(inputId).addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      const img = document.getElementById(imgId);
+      if(file) {
+        img.src = URL.createObjectURL(file);
+        img.style.display = 'block';
+      } else {
+        img.style.display = 'none';
+      }
+    });
+  }
+  setupPreview('bg_upload', 'prev_bg');
+  setupPreview('d0_upload', 'prev_d0');
+  setupPreview('d1_upload', 'prev_d1');
+  setupPreview('d2_upload', 'prev_d2');
+
+  fetch('/api/config').then(r => r.json()).then(d => {
+      document.getElementById('d1').value = d.drinks[0];
+      document.getElementById('d2').value = d.drinks[1];
+      document.getElementById('d3').value = d.drinks[2];
+      if(typeof d.cydMode  !== 'undefined') document.getElementById('cyd_mode').checked  = d.cydMode;
+      if(typeof d.wifiSync !== 'undefined') document.getElementById('wifi_sync').checked = d.wifiSync;
+      if(typeof d.pourTime !== 'undefined') document.getElementById('pour_time_cl').value = (d.pourTime / (d.msPerCl||2000)).toFixed(1);
+      
+      if(d.mqtt) {
+          document.getElementById('men').checked = d.mqtt.enabled;
+          document.getElementById('ms').value    = d.mqtt.server;
+          document.getElementById('mp').value    = d.mqtt.port;
+          document.getElementById('mu').value    = d.mqtt.user;
+          document.getElementById('mtls').checked = d.mqtt.tls || false; // NEU
+          toggleMqtt(d.mqtt.enabled);
+      }
+  });
+  
+  document.getElementById('men').addEventListener('change', function() {
+      toggleMqtt(this.checked);
+  });
+  
+  function toggleMqtt(show) {
+      document.getElementById('mqtt_settings').style.display = show ? 'block' : 'none';
+  }
+
+  function uploadFile(type, elementId) {
+    let fileInput = document.getElementById(elementId);
+    if(fileInput.files.length === 0) { alert("Bitte Datei wählen!"); return; }
+    let file = fileInput.files[0];
+    let formData = new FormData();
+    formData.append("file", file);
+    
+    let btn = fileInput.parentElement.nextElementSibling;
+    let oldText = btn.innerText;
+    btn.innerText = "Lädt hoch...";
+    
+    fetch('/api/upload?type=' + type, { method: 'POST', body: formData })
+      .then(r => { 
+        btn.innerText = oldText;
+        if(r.ok) { alert("Upload fertig!"); if(type === 'bg') location.href = "/"; }
+        else alert("Fehler beim Upload."); 
+      }).catch(e => {
+        btn.innerText = oldText;
+        alert("Netzwerkfehler beim Upload.");
+      });
+  }
+
+  function resetNames() {
+    if(confirm("Bist du sicher? Alle Bilder werden gelöscht und die Namen werden zurückgesetzt!")) {
+        fetch('/api/resetNames', { method: 'POST' })
+        .then(r => { alert("Erfolgreich zurückgesetzt!"); location.reload(); });
+    }
+  }
+
+  function save() {
+    let payload = {
+      d1: document.getElementById('d1').value,
+      d2: document.getElementById('d2').value,
+      d3: document.getElementById('d3').value,
+      mqtt_enabled: document.getElementById('men').checked,
+      mqtt_server:  document.getElementById('ms').value,
+      mqtt_port:    document.getElementById('mp').value,
+      mqtt_user:    document.getElementById('mu').value,
+      mqtt_pass:    document.getElementById('mwd').value,
+      mqtt_tls:     document.getElementById('mtls').checked, // NEU
+      cydMode:      document.getElementById('cyd_mode').checked,
+      wifiSync:     document.getElementById('wifi_sync').checked,
+      pourTimeCl:   parseFloat(document.getElementById('pour_time_cl').value) || 2.0
+    };
+    
+    fetch('/api/saveConfig', { method:'POST', body:JSON.stringify(payload) })
+      .then(r => { alert("Einstellungen gespeichert!"); window.location.href="/"; });
+  }
+
+  // ── Kalibrierung ─────────────────────────────────────────────────────────
+  function saveCalibration() {
+    const ms = parseInt(document.getElementById('msPerCl').value);
+    if(!ms || ms < 500 || ms > 10000) { alert('Ungültiger Wert (500–10000 ms/cl)'); return; }
+    fetch('/api/saveConfig', { method:'POST', body:JSON.stringify({msPerCl: ms}) })
+      .then(r => { if(r.ok) alert('Kalibrierung gespeichert! (' + ms + ' ms/cl = ' + (ms/1000).toFixed(2) + ' s/cl)'); });
+  }
+
+  // ── Flaschen-Mengenzähler ─────────────────────────────────────────────────
+  function renderBottles(data) {
+    const drinks  = data.drinks  || ['Getränk 1', 'Getränk 2', 'Getränk 3'];
+    const bottles = data.bottles || [{sizeMl:700,dispensedMl:0},{sizeMl:700,dispensedMl:0},{sizeMl:700,dispensedMl:0}];
+    const colors  = ['#0044FF','#FF2200','#998800'];
+    const sizes   = [250, 330, 500, 700, 1000, 1500];
+
+    let html = '';
+    for(let i=0; i<3; i++) {
+      const b           = bottles[i] || {sizeMl:700, dispensedMl:0};
+      const dispensedCl = (b.dispensedMl / 10).toFixed(1);
+      const sizeCl      = (b.sizeMl / 10).toFixed(0);
+      const pct         = Math.min(100, Math.round(b.dispensedMl / b.sizeMl * 100));
+      const remaining   = Math.max(0, (b.sizeMl - b.dispensedMl) / 10).toFixed(1);
+      const barColor    = pct >= 80 ? '#ef4444' : pct >= 60 ? '#f97316' : '#38bdf8';
+      const warn        = pct >= 80 ? ' ⚠' : '';
+      const sizeOptions = sizes.map(ml =>
+        `<option value="${ml}"${b.sizeMl===ml?' selected':''}>${ml} ml</option>`
+      ).join('');
+
+      html += `<div style="background:rgba(0,0,0,0.15);border-radius:10px;padding:14px;margin-bottom:10px;border-left:4px solid ${colors[i]}${pct>=80?';border:1px solid #ef4444':''};box-sizing:border-box;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+          <strong style="color:${colors[i]};">Pumpe ${i+1} – ${drinks[i]}${warn}</strong>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <label style="margin:0;color:var(--txt-dim);font-size:0.85rem;">Flasche:</label>
+            <select id="btl_size_${i}" onchange="saveBottleSize(${i})" style="background:#0b1120;color:#fff;border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:0.85rem;cursor:pointer;">${sizeOptions}</select>
+          </div>
+        </div>
+        <div style="background:#0b1120;border-radius:6px;height:12px;overflow:hidden;margin-bottom:5px;border:1px solid var(--border);">
+          <div style="height:100%;width:${pct}%;background:${barColor};transition:width 0.4s;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.82rem;">
+          <span style="color:var(--txt-dim);">Ausgegossen: <b style="color:#fff;">${dispensedCl} cl</b> / ${sizeCl} cl &nbsp;|&nbsp; Rest: <b style="color:${pct>=80?'#ef4444':'#fff'};">${remaining} cl (${pct}%)</b></span>
+          <button onclick="resetBottle(${i})" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid #ef4444;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:0.78rem;width:auto;margin:0;transition:background 0.2s;"
+            onmouseover="this.style.background='rgba(239,68,68,0.25)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">↺ Reset</button>
+        </div>
+      </div>`;
+    }
+    document.getElementById('bottle_container').innerHTML = html;
+
+    // Kalibrierung anzeigen
+    if(data.msPerCl) document.getElementById('msPerCl').value = data.msPerCl;
+    // cl-Menge anzeigen
+    if(data.pourTime && data.msPerCl) document.getElementById('pour_time_cl').value = (data.pourTime/data.msPerCl).toFixed(1);
+  }
+
+  function saveBottleSize(idx) {
+    const ml = parseInt(document.getElementById('btl_size_' + idx).value);
+    let p = {}; p['bottle_size_' + idx] = ml;
+    fetch('/api/saveConfig', {method:'POST', body:JSON.stringify(p)}).then(()=>{});
+  }
+
+  function resetBottle(idx) {
+    if(!confirm('Mengenzähler für Pumpe ' + (idx+1) + ' zurücksetzen?')) return;
+    fetch('/api/resetBottle?drink=' + idx).then(r => {
+      if(r.ok) { alert('Zurückgesetzt!'); loadBottleData(); }
+    });
+  }
+
+  function loadBottleData() {
+    fetch('/api/config').then(r => r.json()).then(d => renderBottles(d)).catch(()=>{});
+  }
+  loadBottleData();
+  setInterval(loadBottleData, 30000);
+
+</script>
+</body>
+</html>

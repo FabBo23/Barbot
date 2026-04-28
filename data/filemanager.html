@@ -1,0 +1,225 @@
+<!DOCTYPE HTML>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Datei-Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root { 
+      --bg: #0f172a; 
+      --card: #1e293b; 
+      --acc: #38bdf8; 
+      --txt: #f8fafc; 
+      --txt-dim: #94a3b8;
+      --danger: #ef4444; 
+      --border: #334155;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--txt); padding: 15px; margin: 0; line-height: 1.5; }
+    .container { max-width: 700px; margin: 0 auto; padding-bottom: 40px; }
+    
+    nav { display: flex; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-bottom: 25px; }
+    nav a { color: var(--acc); text-decoration: none; font-weight: 600; padding: 8px 12px; border-radius: 6px; background: rgba(56, 189, 248, 0.1); transition: background 0.2s; }
+    nav a:hover { background: rgba(56, 189, 248, 0.2); }
+
+    h1 { color: var(--txt); margin-bottom: 5px; text-align: center; }
+    .subtitle { text-align: center; color: var(--txt-dim); margin-bottom: 25px; }
+
+    /* Speicher-Balken */
+    .storage-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);}
+    .storage-bar { background: #0b1120; border-radius: 8px; height: 16px; margin: 10px 0 8px; overflow: hidden; border: 1px solid var(--border); }
+    .storage-fill { height: 100%; background: var(--acc); transition: width 0.4s ease; }
+    .storage-info { font-size: 0.9rem; color: var(--txt-dim); text-align: center; font-weight: 500;}
+
+    /* Upload-Zone */
+    .upload-zone {
+      border: 2px dashed var(--border); border-radius: 16px; padding: 40px 20px;
+      text-align: center; background: rgba(0,0,0,0.15); margin-bottom: 25px;
+      transition: all 0.2s; cursor: pointer; color: var(--txt-dim);
+    }
+    .upload-zone:hover, .upload-zone.drag { border-color: var(--acc); background: rgba(56, 189, 248, 0.05); color: var(--txt); }
+    .upload-zone p { margin: 0 0 15px 0; font-size: 1.1rem; pointer-events: none; }
+    
+    #fileInput { display: none; }
+    .btn-select { background: var(--border); color: #fff; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: background 0.2s; }
+    .btn-select:hover { background: #475569; }
+
+    /* Datei-Liste */
+    .file-list { background: var(--card); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+    .file-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border); transition: background 0.2s; flex-wrap: wrap; gap: 10px;}
+    .file-item:last-child { border-bottom: none; }
+    .file-item:hover { background: rgba(255,255,255,0.02); }
+    .file-name { font-weight: 500; word-break: break-all; margin-right: 15px; display: flex; align-items: center; gap: 8px;}
+    .file-size { color: var(--txt-dim); font-size: 0.85rem; margin-top: 4px; }
+    
+    .btn-del { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: background 0.2s; }
+    .btn-del:hover { background: var(--danger); color: #fff; }
+    .btn-dl { background: #1565c0; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: background 0.2s; }
+    .btn-dl:hover { background: #0d47a1; }
+
+    /* Fortschritt UI */
+    #progress-wrap { display: none; background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; text-align: center; }
+    #progress-bar { height: 16px; background: #0b1120; border-radius: 8px; margin: 15px 0; overflow: hidden; border: 1px solid var(--border); }
+    #progress-fill { height: 100%; width: 0%; background: #10b981; transition: width 0.2s; }
+
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; font-weight: 600; opacity: 0; transition: opacity 0.3s; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .toast.err { background: var(--danger); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a href="/settings">&larr; Zurück zu Settings</a>
+    </nav>
+    
+    <h1>&#128196; Datei-Manager</h1>
+    <p class="subtitle">Lokaler LittleFS Speicher des ESP32</p>
+
+    <div class="storage-card">
+      <div class="storage-bar"><div class="storage-fill" id="storageFill" style="width:0%"></div></div>
+      <div class="storage-info" id="storageInfo">Lade Speicherdaten...</div>
+    </div>
+
+    <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+      <p>&#128228; Dateien hier ablegen oder klicken</p>
+      <button class="btn-select">Dateien auswählen</button>
+      <input type="file" id="fileInput" multiple onchange="uploadFiles(this.files)">
+    </div>
+
+    <div id="progress-wrap">
+      <div id="progress-text" style="color:var(--txt-dim); font-weight:500;">Wird hochgeladen...</div>
+      <div id="progress-bar"><div id="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="file-list" id="fileList">
+      <div style="padding: 20px; text-align: center; color: var(--txt-dim);">Lade Dateien...</div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Aktion erfolgreich</div>
+
+  <script>
+  function formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024, sizes = ['B', 'KB', 'MB'], i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  function getIcon(name) {
+    const ext = name.split('.').pop().toLowerCase();
+    if(['jpg','jpeg','png','gif','webp'].includes(ext)) return '&#128247;';
+    if(['html','htm'].includes(ext)) return '&#127760;';
+    if(['js'].includes(ext)) return '&#128190;';
+    if(['css'].includes(ext)) return '&#127912;';
+    if(['json','jsonl'].includes(ext)) return '&#128203;';
+    if(['bin'].includes(ext)) return '&#9881;&#65039;';
+    return '&#128196;';
+  }
+
+  function showToast(msg, isErr=false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (isErr ? ' err' : '');
+    t.style.opacity = 1;
+    setTimeout(() => t.style.opacity = 0, 3000);
+  }
+
+  function loadFiles() {
+    // Speicher-Info korrekt über /api/fsinfo laden
+    fetch('/api/fsinfo').then(r => r.json()).then(d => {
+      const pct = Math.round((d.used / d.total) * 100);
+      const fill = document.getElementById('storageFill');
+      fill.style.width = pct + '%';
+      fill.style.background = pct > 85 ? '#ef4444' : '#38bdf8';
+      document.getElementById('storageInfo').textContent = formatBytes(d.used) + ' von ' + formatBytes(d.total) + ' belegt (' + pct + '%)';
+    }).catch(() => {
+      document.getElementById('storageInfo').textContent = 'Speicher-Info nicht verfügbar';
+    });
+    
+    // Datei-Liste korrekt über /api/files laden
+    fetch('/api/files').then(r => r.json()).then(files => {
+      const list = document.getElementById('fileList');
+      list.innerHTML = '';
+      if(!files || files.length === 0) {
+        list.innerHTML = '<div style="padding:20px; text-align:center; color:#94a3b8;">Keine Dateien gefunden</div>';
+        return;
+      }
+      files.sort((a,b) => a.name.localeCompare(b.name));
+      files.forEach(f => {
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        item.innerHTML = `
+          <div style="flex:1; min-width:0;">
+            <div class="file-name">${getIcon(f.name)} <span>${f.name}</span></div>
+            <div class="file-size">${formatBytes(f.size)}</div>
+          </div>
+          <div style="display:flex; gap:8px; flex-shrink:0;">
+            <a href="/${f.name.replace(/^\//,'')}" download><button class="btn-dl">Download</button></a>
+            <button class="btn-del" onclick="deleteFile('${f.name}')">Löschen</button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    });
+  }
+
+  function deleteFile(name) {
+    if(!confirm('Datei löschen: ' + name + '?')) return;
+    fetch('/api/deleteFile?name=' + encodeURIComponent(name))
+      .then(r => {
+        if(r.ok) { showToast('Gelöscht: ' + name); loadFiles(); }
+        else showToast('Fehler beim Löschen', true);
+      });
+  }
+
+  function uploadFiles(files) {
+    if(!files || files.length === 0) return;
+    const wrap = document.getElementById('progress-wrap');
+    const fill = document.getElementById('progress-fill');
+    const txt  = document.getElementById('progress-text');
+    wrap.style.display = 'block';
+
+    let idx = 0;
+    function next() {
+      if(idx >= files.length) {
+        fill.style.width = '100%';
+        txt.textContent = 'Fertig!';
+        setTimeout(() => { wrap.style.display = 'none'; fill.style.width = '0%'; }, 2000);
+        loadFiles();
+        return;
+      }
+      const file = files[idx++];
+      txt.textContent = 'Lade hoch: ' + file.name + ' (' + idx + '/' + files.length + ')';
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/uploadAny');
+      xhr.upload.onprogress = e => {
+        if(e.lengthComputable) fill.style.width = Math.round(e.loaded/e.total*100) + '%';
+      };
+      xhr.onload = () => {
+        if(xhr.status === 200) next();
+        else { showToast('Fehler bei: ' + file.name, true); next(); }
+      };
+      xhr.onerror = () => { showToast('Netzwerkfehler', true); next(); };
+      xhr.send(formData);
+    }
+    next();
+  }
+
+  // Drag & Drop Handling
+  const zone = document.getElementById('dropZone');
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag');
+    uploadFiles(e.dataTransfer.files);
+  });
+
+  // Initial laden
+  loadFiles();
+  </script>
+</body>
+</html>

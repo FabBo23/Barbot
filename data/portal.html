@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BarBot Setup</title>
+<style>
+  :root { 
+    --bg: #0f172a; 
+    --card: #1e293b; 
+    --acc: #38bdf8; 
+    --txt: #f8fafc; 
+    --txt-dim: #94a3b8;
+    --border: #334155;
+    --success: #10b981;
+  }
+  body { 
+    font-family: system-ui, -apple-system, sans-serif; 
+    background: var(--bg); color: var(--txt); 
+    margin: 0; padding: 15px; 
+    line-height: 1.5;
+  }
+  .container { max-width: 600px; margin: 0 auto; padding-bottom: 40px; }
+  
+  h1 { text-align: center; color: var(--txt); margin-bottom: 5px; margin-top: 20px;}
+  .subtitle { text-align: center; color: var(--txt-dim); font-size: 0.95rem; margin-bottom: 30px; }
+  
+  h3 { margin-top: 0; color: var(--acc); border-bottom: 1px solid var(--border); padding-bottom: 10px; font-size: 1.1rem; }
+  
+  .card { 
+    background: var(--card); padding: 25px; border-radius: 16px; 
+    margin-bottom: 25px; border: 1px solid var(--border); 
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  label { display: block; margin-top: 15px; color: var(--txt-dim); font-size: 0.9rem; font-weight: 600; margin-bottom: 5px; }
+  
+  input[type=text], input[type=password], input[type=number] { 
+    width: 100%; padding: 12px; background: #0b1120; color: #fff; 
+    border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; 
+    font-size: 1rem; transition: border-color 0.2s; font-family: inherit;
+  }
+  input[type=text]:focus, input[type=password]:focus, input[type=number]:focus {
+    outline: none; border-color: var(--acc);
+  }
+
+  .row { display: flex; gap: 10px; align-items: flex-start; }
+  
+  /* WLAN Scan Liste */
+  #networks { margin-bottom: 20px; max-height: 220px; overflow-y: auto; padding-right: 5px; }
+  .net-item {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(0,0,0,0.15); padding: 12px 15px; margin-bottom: 8px;
+    border-radius: 8px; cursor: pointer; border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .net-item:hover { border-color: var(--acc); background: rgba(56, 189, 248, 0.05); }
+  .net-item strong { color: var(--txt); }
+  
+  button { 
+    background: var(--success); color: white; border: none; padding: 18px; 
+    border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; 
+    font-size: 1.1rem; transition: all 0.2s; margin-top: 10px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+  }
+  button:hover { background: #059669; transform: translateY(-2px); }
+
+  #st { 
+    display: none; margin-top: 20px; padding: 15px; border-radius: 8px; 
+    font-weight: 600; text-align: center; border: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <nav style="display:flex; flex-wrap:wrap; gap:10px; background:rgba(0,0,0,0.2); padding:15px; border-radius:12px; margin-bottom:20px;">
+    <a href="/app" style="color:var(--acc); text-decoration:none; font-weight:600; padding:8px 12px; border-radius:6px; background:rgba(56,189,248,0.1);">&#127867; Zur Hauptseite</a>
+    <a href="/settings" style="color:var(--acc); text-decoration:none; font-weight:600; padding:8px 12px; border-radius:6px; background:rgba(56,189,248,0.1);">&#9881; Einstellungen</a>
+    <a href="/files" style="color:var(--acc); text-decoration:none; font-weight:600; padding:8px 12px; border-radius:6px; background:rgba(56,189,248,0.1);">&#128196; Dateien</a>
+    <a href="/display_upload" style="color:var(--acc); text-decoration:none; font-weight:600; padding:8px 12px; border-radius:6px; background:rgba(56,189,248,0.1);">&#128444; Display</a>
+    <a href="/ota" style="color:var(--acc); text-decoration:none; font-weight:600; padding:8px 12px; border-radius:6px; background:rgba(56,189,248,0.1);">&#8635; Update</a>
+  </nav>
+
+  <h1>&#127867; BarBot Setup</h1>
+  <p class="subtitle">Ersteinrichtung & Verbindungsportal</p>
+
+  <div class="card">
+    <h3>&#128246; WLAN Verbindung</h3>
+    <div id="networks"><p style="color:var(--txt-dim); font-size:0.9rem;">Suche Netzwerke...</p></div>
+    
+    <label>Netzwerkname (SSID)</label>
+    <input type="text" id="ssid" placeholder="Netzwerkname">
+    
+    <label>WLAN Passwort</label>
+    <input type="password" id="pass" placeholder="Dein WLAN-Passwort">
+  </div>
+
+  <div class="card">
+    <h3>&#127379; Getränke</h3>
+    <label>Getränk 1 (Blau)</label><input type="text" id="d0">
+    <label>Getränk 2 (Rot)</label><input type="text" id="d1">
+    <label>Getränk 3 (Gelb)</label><input type="text" id="d2">
+  </div>
+
+  <div class="card">
+    <h3>&#128268; MQTT (optional)</h3>
+    <p style="font-size: 0.85rem; color: var(--txt-dim); margin-top: 0;">Für Smart Home & Handy Steuerung.</p>
+    
+    <label>Server IP / Domain</label><input type="text" id="mq_srv" placeholder="192.168.1.x oder domain.cloud">
+    
+    <div class="row">
+      <div style="flex: 2;">
+        <label>User</label><input type="text" id="mq_usr">
+      </div>
+      <div style="flex: 1;">
+        <label>Port</label><input type="number" id="mq_prt" value="1883">
+      </div>
+    </div>
+    
+    <label>Passwort</label><input type="password" id="mq_pwd">
+    
+    <!-- NEU: Explizite SSL/TLS Auswahl -->
+    <label style="display:flex; align-items:center; gap:8px; margin-top:15px; cursor:pointer;">
+      <input type="checkbox" id="mq_tls" style="width:auto; height: 18px; width: 18px; accent-color: var(--acc);"> 
+      <span style="color: #fff;">SSL/TLS Verschlüsselung (Mqtts) aktivieren</span>
+    </label>
+  </div>
+
+  <button onclick="save()">💾 Speichern &amp; Verbinden</button>
+  <div id="st"></div>
+</div>
+
+<script>
+fetch('/api/scan').then(r=>r.json()).then(nets=>{
+  let h='';
+  nets.sort((a,b)=>b.rssi-a.rssi).forEach(n=>{
+    h+=`<div class='net-item' onclick='document.getElementById("ssid").value="${n.ssid}"'>
+          <span><strong>${n.ssid}</strong> ${n.enc?' &#128274;':''}</span>
+          <span style='color:var(--txt-dim); font-size:0.85rem;'>${n.rssi} dBm</span>
+        </div>`;
+  });
+  document.getElementById('networks').innerHTML = h || '<p style="color:var(--txt-dim); text-align:center;">Keine Netzwerke gefunden</p>';
+}).catch(()=>{
+  document.getElementById('networks').innerHTML = '<p style="color:#ef4444; text-align:center;">Fehler beim WLAN-Scan.</p>';
+});
+
+fetch('/api/config').then(r=>r.json()).then(d=>{
+  if(d.drinks) {
+    document.getElementById('d0').value = d.drinks[0]||'';
+    document.getElementById('d1').value = d.drinks[1]||'';
+    document.getElementById('d2').value = d.drinks[2]||'';
+  }
+  if(d.mqtt) {
+    document.getElementById('mq_srv').value = d.mqtt.server||'';
+    document.getElementById('mq_prt').value = d.mqtt.port||1883;
+    document.getElementById('mq_usr').value = d.mqtt.user||'';
+    document.getElementById('mq_tls').checked = d.mqtt.tls||false; // NEU
+  }
+}).catch(()=>{});
+
+async function save() {
+  const st = document.getElementById('st');
+  st.style.display='block';
+  st.style.background='rgba(56, 189, 248, 0.1)';
+  st.style.borderColor='var(--acc)';
+  st.style.color='var(--acc)';
+  st.textContent='Speichere...';
+
+  const b = new URLSearchParams();
+  b.append('ssid', document.getElementById('ssid').value);
+  b.append('pass', document.getElementById('pass').value);
+  b.append('d0',   document.getElementById('d0').value);
+  b.append('d1',   document.getElementById('d1').value);
+  b.append('d2',   document.getElementById('d2').value);
+  b.append('mq_srv', document.getElementById('mq_srv').value);
+  b.append('mq_prt', document.getElementById('mq_prt').value);
+  b.append('mq_usr', document.getElementById('mq_usr').value);
+  b.append('mq_tls', document.getElementById('mq_tls').checked ? "true" : "false"); // NEU
+  
+  const pwd = document.getElementById('mq_pwd').value;
+  if(pwd) b.append('mq_pwd', pwd);
+
+  try {
+    const r = await fetch('/save', {method:'POST', body:b});
+    const t = await r.text();
+    st.style.background='rgba(16, 185, 129, 0.1)'; 
+    st.style.borderColor='var(--success)';
+    st.style.color='var(--success)';
+    st.textContent = t;
+  } catch(e) {
+    st.style.background='rgba(56, 189, 248, 0.1)'; 
+    st.style.borderColor='var(--acc)';
+    st.style.color='var(--acc)';
+    st.textContent = 'Verbindung getrennt – BarBot startet neu...';
+  }
+}
+</script>
+</body>
+</html>

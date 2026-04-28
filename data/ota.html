@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Firmware Update</title>
+<style>
+  :root{--bg:#0f172a;--card:#1e293b;--acc:#38bdf8;--txt:#f8fafc;--border:#334155}
+  body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--txt);padding:20px;margin:0}
+  .container{max-width:480px;margin:0 auto}
+  nav{background:rgba(0,0,0,.2);padding:15px;border-radius:12px;margin-bottom:25px}
+  nav a{color:var(--acc);text-decoration:none;font-weight:600;padding:8px 12px;border-radius:6px;background:rgba(56,189,248,.1)}
+  nav a:hover{background:rgba(56,189,248,.2)}
+  h1{color:var(--txt);text-align:center}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:25px;margin-bottom:20px}
+  p{color:#94a3b8;font-size:.9rem}
+  input[type=file]{width:100%;padding:10px;margin:10px 0;background:#0b1120;color:var(--txt);border:1px solid var(--border);border-radius:8px;box-sizing:border-box}
+  input[type=file]::file-selector-button{background:var(--border);color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;margin-right:12px}
+  button{width:100%;padding:13px;background:var(--acc);color:#000;border:none;border-radius:8px;font-size:1rem;font-weight:bold;cursor:pointer;margin-top:10px;transition:background .2s}
+  button:hover{background:#0284c7;color:#fff}
+  button:disabled{background:#475569;color:#94a3b8;cursor:not-allowed}
+  #status{margin-top:16px;padding:14px;border-radius:8px;display:none;font-weight:500}
+  .ok {background:rgba(16,185,129,.1);color:#34d399;border:1px solid #10b981}
+  .err{background:rgba(239,68,68,.1);color:#f87171;border:1px solid #ef4444}
+  #bar{width:100%;height:14px;background:#0b1120;border-radius:7px;margin-top:12px;overflow:hidden;display:none;border:1px solid var(--border)}
+  #fill{height:100%;width:0%;background:var(--acc);transition:width .3s}
+</style>
+</head>
+<body>
+<div class="container">
+  <nav><a href="/settings">&larr; Zurück zu Settings</a></nav>
+  <h1>&#9881; Firmware Update</h1>
+  <div class="card">
+    <p>Firmware-Datei aus der Arduino IDE hochladen (<strong>.bin</strong> ohne Bootloader, ca. 1 MB).</p>
+    <input type="file" id="bin" accept=".bin">
+    <button id="btn" onclick="upload()">Firmware flashen</button>
+    <div id="bar"><div id="fill"></div></div>
+    <div id="status"></div>
+  </div>
+</div>
+<script>
+function upload() {
+  const f = document.getElementById('bin').files[0];
+  if(!f) { alert('Bitte zuerst eine .bin Datei auswählen'); return; }
+  const btn = document.getElementById('btn');
+  const st  = document.getElementById('status');
+  const bar = document.getElementById('bar');
+  const fill= document.getElementById('fill');
+  btn.disabled = true;
+  bar.style.display = 'block';
+  st.className = 'ok'; st.style.display = 'block'; st.textContent = 'Upload läuft...';
+  const fd = new FormData();
+  fd.append('firmware', f, f.name);
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/ota', true);
+  xhr.upload.onprogress = e => {
+    if(e.lengthComputable) {
+      const p = Math.round(e.loaded / e.total * 100);
+      fill.style.width = p + '%';
+      st.textContent = 'Upload: ' + p + '%';
+    }
+  };
+  xhr.onload = () => {
+    if(xhr.status === 200) {
+      st.className = 'ok';
+      fill.style.width = '100%';
+      st.textContent = '✓ Erfolgreich! BarBot startet in 3s neu...';
+    } else {
+      st.className = 'err';
+      st.textContent = 'Fehler: ' + xhr.responseText;
+      btn.disabled = false;
+    }
+  };
+  xhr.onerror = () => {
+    st.className = 'err';
+    st.textContent = 'Verbindung verloren – BarBot startet möglicherweise neu.';
+  };
+  xhr.send(fd);
+}
+</script>
+</body>
+</html>

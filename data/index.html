@@ -1,0 +1,547 @@
+<!DOCTYPE HTML>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>BarBot 3000</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+
+    :root {
+      /* Modern Color Palette */
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --bg-overlay: rgba(15, 23, 42, 0.05); /* Noch transparenter für klares Hintergrundbild */
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-bg-hover: rgba(45, 60, 85, 0.9);
+      --slot-border: rgba(255, 255, 255, 0.15);
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.5);
+      
+      /* Drink Colors - adjusted to be more vibrant/modern */
+      --col-0: #60a5fa; /* Blue */
+      --col-1: #f87171; /* Red */
+      --col-2: #facc15; /* Yellow */
+      
+      /* Status Colors */
+      --success: #10b981;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body { 
+      font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+      /* Fallback dark background gradient combined with user background - jetzt sehr hell */
+      background: linear-gradient(135deg, var(--bg-overlay), rgba(2, 6, 23, 0.15)), url('bg.jpg') no-repeat center center fixed; 
+      background-size: cover; 
+      color: var(--text); 
+      margin: 0; 
+      padding: 0; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      min-height: 100vh; 
+      overflow-x: hidden; 
+    }
+
+    header { 
+      width: 100%; 
+      padding: 20px 15px; 
+      background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 100%); 
+      text-align: center; 
+      position: relative; 
+      z-index: 100; 
+    }
+
+    h1 { 
+      margin: 0; 
+      font-size: 2.2rem; 
+      font-weight: 800;
+      color: #fff; 
+      letter-spacing: 4px; 
+      text-transform: uppercase;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.5); 
+    }
+
+    .setup-btn { 
+      position: absolute; 
+      top: 20px; 
+      right: 25px; 
+      text-decoration: none; 
+      font-size: 1.6rem; 
+      color: var(--text-muted); 
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+      background: none; 
+      border: none; 
+      padding: 5px; 
+      cursor: pointer;
+    }
+
+    .setup-btn:hover { 
+      color: #fff; 
+      transform: rotate(90deg) scale(1.1); 
+      text-shadow: 0 0 15px rgba(255,255,255,0.6); 
+    }
+
+    .controls { 
+      margin: 30px 20px 10px 20px; 
+      z-index: 100; 
+      display: flex; 
+      gap: 25px; 
+    }
+
+    button { 
+      border: none; 
+      padding: 14px 45px; 
+      font-size: 1.1rem; 
+      border-radius: 50px; 
+      cursor: pointer; 
+      font-weight: 800; 
+      color: white; 
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4); 
+      backdrop-filter: blur(10px); 
+      -webkit-backdrop-filter: blur(10px);
+      text-transform: uppercase; 
+      letter-spacing: 2px; 
+      transition: all 0.3s ease; 
+    }
+
+    button:active { transform: scale(0.92); }
+    
+    .btn-start { 
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.9)); 
+      border: 1px solid rgba(16, 185, 129, 0.5); 
+    }
+    .btn-start:hover {
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 1)); 
+    }
+
+    .btn-stop { 
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.8), rgba(220, 38, 38, 0.9)); 
+      border: 1px solid rgba(239, 68, 68, 0.5); 
+    }
+    .btn-stop:hover {
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 1)); 
+    }
+
+    .stage-container { 
+      position: relative; 
+      width: 100%; 
+      max-width: 1200px; 
+      height: 600px; 
+      margin-top: 20px; 
+    }
+
+    .global-controls { 
+      position: absolute; 
+      top: 35%; 
+      left: 50%; 
+      transform: translate(-50%, -50%); 
+      background: var(--card-bg); 
+      padding: 30px; 
+      border-radius: 24px; 
+      text-align: center; 
+      border: 1px solid var(--slot-border); 
+      backdrop-filter: blur(16px); 
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 50; 
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05); 
+      width: 380px; 
+    }
+
+    #busyControls { width: 90%; max-width: 500px; }
+    
+    .global-controls h3 { 
+      margin: 0 0 20px 0; 
+      font-size: 1.1rem; 
+      color: var(--text); 
+      font-weight: 600;
+      text-transform: uppercase; 
+      letter-spacing: 1.5px; 
+    }
+
+    .drink-grid { 
+      display: grid; 
+      grid-template-columns: repeat(3, 1fr); 
+      gap: 15px; 
+      justify-items: center; 
+    }
+
+    .drink-btn { 
+      background: rgba(255,255,255,0.03); 
+      border: 1px solid rgba(255,255,255,0.08); 
+      border-radius: 16px; 
+      padding: 15px 10px; 
+      cursor: pointer; 
+      width: 100%; 
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+    }
+
+    .drink-btn:hover {
+      transform: translateY(-5px);
+    }
+
+    .drink-btn:nth-child(1) { border-bottom: 3px solid var(--col-0); }
+    .drink-btn:nth-child(1):hover { background: rgba(96, 165, 250, 0.1); box-shadow: 0 10px 20px rgba(96, 165, 250, 0.15); }
+    
+    .drink-btn:nth-child(2) { border-bottom: 3px solid var(--col-1); }
+    .drink-btn:nth-child(2):hover { background: rgba(248, 113, 113, 0.1); box-shadow: 0 10px 20px rgba(248, 113, 113, 0.15); }
+    
+    .drink-btn:nth-child(3) { border-bottom: 3px solid var(--col-2); }
+    .drink-btn:nth-child(3):hover { background: rgba(250, 204, 21, 0.1); box-shadow: 0 10px 20px rgba(250, 204, 21, 0.15); }
+
+    .drink-btn img { 
+      width: 55px; 
+      height: 55px; 
+      object-fit: contain; 
+      margin-bottom: 12px; 
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)); 
+      transition: transform 0.3s ease; 
+    }
+    
+    @media (hover: hover) { 
+      .drink-btn:hover img { transform: scale(1.15) rotate(5deg); } 
+    }
+
+    .drink-btn span { 
+      font-size: 0.85rem; 
+      color: var(--text); 
+      font-weight: 600; 
+    }
+
+    #imgPreview { 
+      display: none; 
+      position: fixed; 
+      z-index: 9999; 
+      background: rgba(15, 23, 42, 0.95); 
+      border-radius: 16px; 
+      padding: 15px; 
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7); 
+      pointer-events: none; 
+      text-align: center; 
+      border: 1px solid var(--slot-border); 
+      backdrop-filter: blur(10px);
+      transform: translateY(-8px); 
+    }
+
+    #imgPreview.visible { display: block; animation: pvIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    @keyframes pvIn { 
+      from { opacity:0; transform:translateY(10px) scale(0.9); } 
+      to { opacity:1; transform:translateY(-8px) scale(1); } 
+    }
+
+    #imgPreview img { width: 150px; height: 150px; object-fit: contain; display: block; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.4)); }
+    #imgPreview span { display: block; margin-top: 10px; font-size: 1rem; font-weight: 600; color: #fff; letter-spacing: 1px; }
+
+    .busy-img { 
+      width: 100%; 
+      height: auto; 
+      aspect-ratio: 16/9; 
+      object-fit: cover; 
+      border-radius: 16px; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+      margin: 15px 0; 
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    #busyStatusText { color: var(--text); font-size: 1.3rem; margin: 0; }
+    #busySlotText { font-size: 1.1rem; color: var(--accent); margin: 5px 0 0 0; font-weight: 600; }
+
+    .slot { 
+      position: absolute; 
+      width: 130px; /* VERBREITERT: Damit längere Namen wie "Scheibel" passen */
+      background: var(--card-bg); 
+      backdrop-filter: blur(12px); 
+      -webkit-backdrop-filter: blur(12px); 
+      border: 1px solid var(--slot-border); 
+      border-radius: 18px; 
+      padding: 15px 10px; /* Platz optimiert */
+      text-align: center; 
+      transform: translate(-50%, -50%); 
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1); 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 10px; 
+    }
+
+    .slot:hover { 
+      z-index: 10000 !important; 
+      transform: translate(-50%, -50%) scale(1.15); 
+      background: var(--card-bg-hover);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2); 
+    }
+
+    .slot.missing { 
+      border: 1px dashed rgba(255,255,255,0.2); 
+      background: rgba(15, 23, 42, 0.3); 
+      opacity: 0.6; 
+      box-shadow: none; 
+    }
+    
+    .slot.active { 
+      border-color: rgba(16, 185, 129, 0.5); 
+      background: rgba(16, 185, 129, 0.15); 
+      opacity: 1; 
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.15); 
+    }
+
+    .slot.filling { 
+      border-color: var(--accent); 
+      background: rgba(56, 189, 248, 0.2); 
+      box-shadow: 0 0 30px var(--accent-glow); 
+      transform: translate(-50%,-50%) scale(1.15); 
+      z-index: 6000; 
+      animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.5); }
+      70% { box-shadow: 0 0 0 15px rgba(56, 189, 248, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+    }
+
+    .status-dot { 
+      display: inline-block; 
+      width: 24px; 
+      height: 24px; 
+      border-radius: 50%; 
+      margin: 2px 0; 
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); 
+      border: 2px solid rgba(255,255,255,0.1); 
+      transition: all 0.3s ease; 
+    }
+
+    .dot-off { background-color: #1e293b; }
+    .dot-missing { background-color: #0f172a; border-color: rgba(255,255,255,0.05); }
+    .dot-0 { background-color: var(--col-0); box-shadow: 0 0 15px var(--col-0), inset 0 2px 4px rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.3); }
+    .dot-1 { background-color: var(--col-1); box-shadow: 0 0 15px var(--col-1), inset 0 2px 4px rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.3); }
+    .dot-2 { background-color: var(--col-2); box-shadow: 0 0 15px var(--col-2), inset 0 2px 4px rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.3); }
+
+    .pos-label { 
+      font-size: 0.75rem; 
+      color: var(--text-muted); 
+      display: block; 
+      font-weight: 800; 
+      text-transform: uppercase; 
+      letter-spacing: 1px;
+    }
+
+    select { 
+      width: 100%; 
+      background: rgba(15, 23, 42, 0.8) url("data:image/svg+xml;utf8,<svg fill='%2394a3b8' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>") no-repeat right 6px center;
+      color: #fff; 
+      border: 1px solid rgba(255,255,255,0.1); 
+      border-radius: 8px; 
+      font-size: 0.85rem; 
+      font-weight: 600;
+      padding: 8px 20px 8px 8px; /* Platz für Pfeil minimiert, um mehr Text anzuzeigen */
+      cursor: pointer; 
+      outline: none; 
+      appearance: none;
+      -webkit-appearance: none;
+      transition: border-color 0.2s;
+      text-overflow: ellipsis; /* Verhindert unschönes Abschneiden, falls es doch mal zu lang wird */
+    }
+
+    select:focus { 
+      border-color: var(--accent); 
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+
+    select option {
+      background: #0f172a;
+      color: #fff;
+    }
+
+    @media (max-width: 700px) {
+      .stage-container { height: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 10px 15px; }
+      .slot { position: relative !important; transform: none !important; left: auto !important; top: auto !important; width: 100%; }
+      .slot:hover { transform: translateY(-3px) !important; }
+      .slot.filling { transform: scale(1.05) !important; }
+      .global-controls { position: relative; top: auto; left: auto; transform: none; grid-column: 1 / -1; width: 100%; margin-bottom: 25px; }
+      #busyControls { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div id="imgPreview"><img id="pvImg" src="" alt=""><span id="pvName"></span></div>
+  <header>
+    <h1>BARBOT 3000</h1>
+    <a href="/settings" class="setup-btn" title="Einstellungen">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    </a>
+  </header>
+  <div class="controls">
+    <button class="btn-start" onclick="c('start')">START</button>
+    <button class="btn-stop"  onclick="c('stop')">STOP</button>
+  </div>
+  <div class="stage-container" id="stage">
+    <div class="global-controls" id="idleControls">
+      <h3>Alle Gläser füllen mit:</h3>
+      <div class="drink-grid" id="globalGrid"></div>
+    </div>
+    <div class="global-controls" id="busyControls" style="display:none;">
+      <h3 id="busyStatusText">Bereite zu...</h3>
+      <img id="busyImg" src="" class="busy-img" onerror="imgError(this)" data-drink="-1">
+      <h4 id="busySlotText">Position -</h4>
+    </div>
+  </div>
+
+<script>
+  let drinks = ["1","2","3"];
+  const numSlots = 12;
+  let slotElements = [];
+
+  function getSvg(color){const xml=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2"><path d="M17 8h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2m-2 3l-2-3l-4-4l-4-4h-2l0-7h13.2c1.1 0 2 .9 2 2v2"/></svg>`;return "data:image/svg+xml;base64,"+btoa(xml);}
+  const placeholders={0:getSvg('#60a5fa'),1:getSvg('#f87171'),2:getSvg('#facc15'),'-1':getSvg('#ffffff')};
+  function imgError(img){let id=img.getAttribute('data-drink');img.src=placeholders[id]||placeholders['-1'];}
+
+  fetch('/api/config').then(r=>r.json()).then(cfg=>{
+    drinks=cfg.drinks;
+    createGlobalButtons();
+    createSlots();
+    connectWS();
+    window.addEventListener('resize',arrangeArch);
+  });
+
+  let wsRetryTimer=null;
+  function connectWS(){
+    clearTimeout(wsRetryTimer);
+    const ws=new WebSocket("ws://"+location.host+"/ws");
+    ws.onmessage=(e)=>{try{processStatusData(JSON.parse(e.data));}catch(_){}};
+    ws.onclose=()=>{wsRetryTimer=setTimeout(connectWS,3000);};
+    ws.onerror=()=>ws.close();
+  }
+
+  const pv=document.getElementById('imgPreview');
+  function showPreview(src,name,btnEl){
+    document.getElementById('pvImg').src=src;
+    document.getElementById('pvName').textContent=name;
+    const r=btnEl.getBoundingClientRect();
+    let left=r.left+r.width/2-90, top=r.top-190;
+    if(top<8)top=r.bottom+8;
+    if(left<8)left=8;
+    if(left+180>window.innerWidth-8)left=window.innerWidth-188;
+    pv.style.left=left+'px'; pv.style.top=top+'px';
+    pv.classList.add('visible');
+  }
+  function hidePreview(){pv.classList.remove('visible');}
+
+  function createGlobalButtons(){
+    const grid=document.getElementById('globalGrid');
+    grid.innerHTML="";
+    for(let i=0;i<3;i++){
+      let btn=document.createElement('div');
+      btn.className='drink-btn';
+      const name=drinks[i];
+      btn.innerHTML=`<img src="/drink_${i}.jpg" data-drink="${i}" onerror="imgError(this)"><span>${name}</span>`;
+      let hoverTimer=null;
+      btn.addEventListener('mouseenter',()=>{hoverTimer=setTimeout(()=>showPreview(btn.querySelector('img').src,name,btn),350);});
+      btn.addEventListener('mouseleave',()=>{clearTimeout(hoverTimer);hidePreview();});
+      btn.addEventListener('click',()=>setAll(i));
+      grid.appendChild(btn);
+    }
+  }
+
+  function createSlots(){
+    const container=document.getElementById('stage');
+    let idleCtrl=document.getElementById('idleControls');
+    let busyCtrl=document.getElementById('busyControls');
+    container.innerHTML="";
+    container.appendChild(idleCtrl);
+    container.appendChild(busyCtrl);
+    slotElements=[];
+    let opts="";
+    for(let i=0;i<3;i++) opts+=`<option value="${i}">${drinks[i]}</option>`;
+    opts+=`<option value="-1">Leer</option>`;
+    for(let i=0;i<numSlots;i++){
+      let div=document.createElement('div');
+      div.className='slot'; div.id='s'+i;
+      div.innerHTML=`<span class="pos-label">Pos ${i+1}</span><span id="dot${i}" class="status-dot dot-off"></span><select id="sl${i}" onchange="u(${i})">${opts}</select>`;
+      container.appendChild(div);
+      slotElements.push({el:div,dot:document.getElementById('dot'+i),sel:document.getElementById('sl'+i),lastVal:-99});
+    }
+    arrangeArch();
+  }
+
+  function arrangeArch(){
+    if(window.innerWidth<=700){for(let obj of slotElements)obj.el.style="";return;}
+    const container=document.getElementById('stage');
+    const radius=Math.min(container.offsetWidth/2-60,580);
+    const centerX=container.offsetWidth/2, centerY=40;
+    const startAngle=Math.PI*0.98, endAngle=Math.PI*0.02;
+    const step=(startAngle-endAngle)/(numSlots-1);
+    for(let i=0;i<numSlots;i++){
+      let angle=startAngle-(i*step);
+      let x=centerX+radius*Math.cos(angle);
+      let y=centerY+radius*Math.sin(angle)*0.85;
+      slotElements[i].el.style.left=x+"px";
+      slotElements[i].el.style.top=y+"px";
+      slotElements[i].el.style.zIndex=Math.floor(y);
+    }
+  }
+
+  function u(id){fetch(`/api/setSlot?id=${id}&val=${document.getElementById('sl'+id).value}`);}
+  function setAll(val){fetch(`/api/setAll?val=${val}`);}
+  function c(cmd){fetch('/api/'+cmd);}
+
+  function updateSlotVisuals(idx,drinkId,hasGlass){
+    let obj=slotElements[idx]; if(!obj)return;
+    let dotClass=!hasGlass?"dot-missing":(drinkId==0?"dot-0":(drinkId==1?"dot-1":"dot-2"));
+    obj.dot.className="status-dot "+dotClass;
+    if(hasGlass){obj.el.classList.add('active');obj.el.classList.remove('missing');}
+    else{obj.el.classList.add('missing');obj.el.classList.remove('active');}
+    if(obj.lastVal!==drinkId)obj.lastVal=drinkId;
+  }
+
+  function processStatusData(data){
+    let isBusy=data.busy===true;
+    let activeSlot=data.activeSlot;
+    let activeDrink=data.activeDrink;
+
+    document.getElementById('idleControls').style.display = isBusy ? 'none' : 'block';
+    document.getElementById('busyControls').style.display = isBusy ? 'block' : 'none';
+
+    if(isBusy){
+      let img=document.getElementById('busyImg');
+      let targetSrc="", targetTxt="";
+      img.setAttribute('data-drink',activeDrink);
+      if(activeDrink>=0 && activeDrink<=2){
+        targetSrc=`/drink_${activeDrink}.jpg`;
+        targetTxt="Fülle "+drinks[activeDrink]+"...";
+      } else {
+        targetSrc=placeholders['-1'];
+        targetTxt="Arbeite...";
+      }
+      if(!img.src.includes(targetSrc))img.src=targetSrc;
+      if(document.getElementById('busyStatusText').innerText!==targetTxt)
+        document.getElementById('busyStatusText').innerText=targetTxt;
+      if(activeSlot>=0)
+        document.getElementById('busySlotText').innerText="An Position "+(activeSlot+1);
+    }
+
+    for(let i=0;i<numSlots;i++){
+      let obj=slotElements[i]; if(!obj)continue;
+      let hasGlass=data.glasses[i]===1;
+      let drinkId=data.slots[i];
+      if(document.activeElement!==obj.sel)obj.sel.value=drinkId;
+      updateSlotVisuals(i,drinkId,hasGlass);
+      if(isBusy && i===activeSlot)obj.el.classList.add('filling');
+      else obj.el.classList.remove('filling');
+    }
+  }
+</script>
+</body>
+</html>
