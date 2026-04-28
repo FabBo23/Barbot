@@ -1,0 +1,148 @@
+name: Build & Release
+
+# Startet bei jedem Tag v*.*.* (z.B. v1.2.3)
+# Oder manuell über GitHub → Actions → "Run workflow"
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # Nötig um ein Release erstellen zu dürfen
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Code auschecken
+      # -----------------------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # 2. arduino-cli installieren
+      # -----------------------------------------------------------------------
+      - name: Install arduino-cli
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+          echo "$GITHUB_WORKSPACE/bin" >> $GITHUB_PATH
+
+      # -----------------------------------------------------------------------
+      # 3. ESP32-Core einrichten
+      #    Pinned auf 2.0.17 (ESP-IDF 4.4) – stabile, weit verbreitete Version.
+      #    Wenn du auf Core 3.x wechselst, muss auch ESPAsyncWebServer gewechselt
+      #    werden (mathieucarbou-Fork statt me-no-dev).
+      # -----------------------------------------------------------------------
+      - name: Configure ESP32 core
+        run: |
+          arduino-cli config init
+          arduino-cli config set board_manager.additional_urls \
+            https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          arduino-cli config set library.enable_unsafe_install true
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@2.0.17
+
+      # -----------------------------------------------------------------------
+      # 4. Arduino-Bibliotheken installieren
+      #    ESPAsyncWebServer / AsyncTCP kommen via Git-URL (nicht im offiziellen
+      #    Library-Manager vorhanden).
+      # -----------------------------------------------------------------------
+      - name: Install Arduino libraries
+        run: |
+          arduino-cli lib install "ESP32Servo"
+          arduino-cli lib install "Adafruit NeoPixel"
+          arduino-cli lib install "PubSubClient"
+          arduino-cli lib install "ArduinoJson"
+          arduino-cli lib install --git-url \
+            https://github.com/me-no-dev/AsyncTCP.git
+          arduino-cli lib install --git-url \
+            https://github.com/me-no-dev/ESPAsyncWebServer.git
+
+      # -----------------------------------------------------------------------
+      # 5. Firmware kompilieren
+      #    FQBN:  esp32:esp32:esp32  = ESP32 Dev Module, 4 MB Flash, default
+      #    Partition-Scheme "default" → SPIFFS/LittleFS = 0x160000 (1,375 MB)
+      #    Falls du ein anderes Board oder Flash-Layout nutzt, FQBN hier anpassen.
+      # -----------------------------------------------------------------------
+      - name: Build firmware
+        run: |
+          mkdir -p build
+          arduino-cli compile \
+            --fqbn "esp32:esp32:esp32:PartitionScheme=default,FlashSize=4M" \
+            --output-dir build/ \
+            --warnings none \
+            .
+          # Firmware-Binary umbenennen
+          cp build/*.ino.bin build/barbot-firmware.bin
+
+      # -----------------------------------------------------------------------
+      # 6. LittleFS-Image aus dem data/-Ordner bauen
+      #    Größe muss mit der Partition-Tabelle übereinstimmen:
+      #      default 4MB → spiffs/LittleFS = 0x160000 Bytes
+      #    Falls mklittlefs nicht im ESP32-Core gefunden wird, wird es
+      #    automatisch vom earlephilhower-Release heruntergeladen.
+      # -----------------------------------------------------------------------
+      - name: Build LittleFS image
+        run: |
+          MKLFS=$(find ~/.arduino15/packages/esp32/tools/mklittlefs \
+                   -name mklittlefs -type f 2>/dev/null | head -1)
+
+          if [ -z "$MKLFS" ]; then
+            echo "mklittlefs nicht im Core gefunden – lade Fallback herunter..."
+            wget -q https://github.com/earlephilhower/mklittlefs/releases/download/3.2.0/x86_64-linux-gnu-mklittlefs-3.2.0.tar.gz
+            tar -xf x86_64-linux-gnu-mklittlefs-3.2.0.tar.gz
+            MKLFS=./mklittlefs
+            chmod +x "$MKLFS"
+          fi
+
+          echo "Verwende mklittlefs: $MKLFS"
+          # -c : Quellordner  -s : Partitionsgröße  -b : Blockgröße  -p : Seitengröße
+          "$MKLFS" -c data/ -s 0x160000 -b 4096 -p 256 build/barbot-littlefs.bin
+
+      # -----------------------------------------------------------------------
+      # 7. Versions-Tag aus dem Git-Ref lesen
+      # -----------------------------------------------------------------------
+      - name: Extract version
+        id: ver
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=dev-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          fi
+
+      # -----------------------------------------------------------------------
+      # 8. GitHub Release erstellen und Binaries anhängen
+      # -----------------------------------------------------------------------
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "BarBot ${{ steps.ver.outputs.VERSION }}"
+          tag_name: ${{ steps.ver.outputs.VERSION }}
+          body: |
+            ## BarBot ${{ steps.ver.outputs.VERSION }}
+
+            ### Dateien
+
+            | Datei | Beschreibung | Hochladen via |
+            |-------|-------------|---------------|
+            | `barbot-firmware.bin` | ESP32 Firmware (~1 MB) | Weboberfläche → OTA |
+            | `barbot-littlefs.bin` | Dateisystem-Image (HTML, JS, CSS) | Weboberfläche → OTA → Dateisystem |
+
+            ### OTA Update (über Weboberfläche)
+
+            1. BarBot mit dem WLAN verbinden und `http://<IP>/ota` aufrufen
+            2. **Firmware:** `barbot-firmware.bin` hochladen → „Firmware flashen"
+            3. **Webseiten (nur wenn geändert):** `barbot-littlefs.bin` hochladen → „Dateisystem flashen"
+            4. BarBot startet automatisch neu
+
+            > **Hinweis:** Beim Update des Dateisystems werden alle Custom-Bilder
+            > (Getränkefotos, Hintergrundbild) gelöscht und müssen neu hochgeladen werden.
+            > Einstellungen (WLAN, MQTT, Getränkenamen) bleiben erhalten – sie liegen im NVS.
+          files: |
+            build/barbot-firmware.bin
+            build/barbot-littlefs.bin
+          draft: false
+          prerelease: false

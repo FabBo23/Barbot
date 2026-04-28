@@ -3,80 +3,251 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Firmware Update</title>
+<title>Firmware Update – BarBot</title>
 <style>
-  :root{--bg:#0f172a;--card:#1e293b;--acc:#38bdf8;--txt:#f8fafc;--border:#334155}
+  :root{--bg:#0f172a;--card:#1e293b;--acc:#38bdf8;--txt:#f8fafc;--border:#334155;
+        --ok:#10b981;--warn:#f59e0b;--err:#ef4444}
+  *{box-sizing:border-box}
   body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--txt);padding:20px;margin:0}
-  .container{max-width:480px;margin:0 auto}
-  nav{background:rgba(0,0,0,.2);padding:15px;border-radius:12px;margin-bottom:25px}
-  nav a{color:var(--acc);text-decoration:none;font-weight:600;padding:8px 12px;border-radius:6px;background:rgba(56,189,248,.1)}
-  nav a:hover{background:rgba(56,189,248,.2)}
-  h1{color:var(--txt);text-align:center}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:25px;margin-bottom:20px}
-  p{color:#94a3b8;font-size:.9rem}
-  input[type=file]{width:100%;padding:10px;margin:10px 0;background:#0b1120;color:var(--txt);border:1px solid var(--border);border-radius:8px;box-sizing:border-box}
-  input[type=file]::file-selector-button{background:var(--border);color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;margin-right:12px}
-  button{width:100%;padding:13px;background:var(--acc);color:#000;border:none;border-radius:8px;font-size:1rem;font-weight:bold;cursor:pointer;margin-top:10px;transition:background .2s}
+  .container{max-width:520px;margin:0 auto}
+  nav{background:rgba(0,0,0,.2);padding:12px 16px;border-radius:12px;margin-bottom:24px}
+  nav a{color:var(--acc);text-decoration:none;font-weight:600}
+  h1{text-align:center;margin:0 0 20px}
+  h2{font-size:1rem;margin:0 0 10px;color:var(--acc)}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:18px}
+  p,small{color:#94a3b8;font-size:.875rem;line-height:1.5;margin:0 0 10px}
+  input[type=file]{width:100%;padding:10px;margin:10px 0;background:#0b1120;color:var(--txt);
+    border:1px solid var(--border);border-radius:8px}
+  input[type=file]::file-selector-button{background:var(--border);color:#fff;border:none;
+    padding:7px 14px;border-radius:6px;cursor:pointer;margin-right:10px}
+  button{width:100%;padding:13px;background:var(--acc);color:#000;border:none;border-radius:8px;
+    font-size:1rem;font-weight:bold;cursor:pointer;margin-top:8px;transition:background .2s}
   button:hover{background:#0284c7;color:#fff}
   button:disabled{background:#475569;color:#94a3b8;cursor:not-allowed}
-  #status{margin-top:16px;padding:14px;border-radius:8px;display:none;font-weight:500}
-  .ok {background:rgba(16,185,129,.1);color:#34d399;border:1px solid #10b981}
-  .err{background:rgba(239,68,68,.1);color:#f87171;border:1px solid #ef4444}
-  #bar{width:100%;height:14px;background:#0b1120;border-radius:7px;margin-top:12px;overflow:hidden;display:none;border:1px solid var(--border)}
-  #fill{height:100%;width:0%;background:var(--acc);transition:width .3s}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--acc);margin-top:0}
+  .btn-ghost:hover{background:rgba(56,189,248,.1);color:var(--acc)}
+  .bar-wrap{width:100%;height:14px;background:#0b1120;border-radius:7px;margin-top:12px;
+    overflow:hidden;display:none;border:1px solid var(--border)}
+  .bar-fill{height:100%;width:0%;background:var(--acc);transition:width .3s}
+  .status{margin-top:14px;padding:12px 14px;border-radius:8px;display:none;font-weight:500;font-size:.9rem}
+  .ok {background:rgba(16,185,129,.1);color:#34d399;border:1px solid var(--ok)}
+  .err{background:rgba(239,68,68,.1) ;color:#f87171;border:1px solid var(--err)}
+  .warn{background:rgba(245,158,11,.1);color:#fcd34d;border:1px solid var(--warn)}
+  .version-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.8rem;font-weight:600}
+  .badge-ok  {background:rgba(16,185,129,.15);color:#34d399}
+  .badge-new {background:rgba(245,158,11,.15) ;color:#fcd34d}
+  .badge-unk {background:rgba(148,163,184,.1) ;color:#94a3b8}
+  #update-info{margin-top:12px;display:none}
+  #update-info a{color:var(--acc)}
+  .divider{border:none;border-top:1px solid var(--border);margin:14px 0}
+  .warn-box{background:rgba(245,158,11,.08);border:1px solid var(--warn);border-radius:8px;
+    padding:10px 14px;margin-bottom:12px}
+  .warn-box p{color:#fcd34d;margin:0}
 </style>
 </head>
 <body>
 <div class="container">
   <nav><a href="/settings">&larr; Zurück zu Settings</a></nav>
   <h1>&#9881; Firmware Update</h1>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       Karte 1: GitHub Update-Check
+  ═══════════════════════════════════════════════════════════════ -->
   <div class="card">
-    <p>Firmware-Datei aus der Arduino IDE hochladen (<strong>.bin</strong> ohne Bootloader, ca. 1 MB).</p>
-    <input type="file" id="bin" accept=".bin">
-    <button id="btn" onclick="upload()">Firmware flashen</button>
-    <div id="bar"><div id="fill"></div></div>
-    <div id="status"></div>
+    <h2>&#127381; Update verfügbar?</h2>
+    <div class="version-row">
+      <div>
+        <small>Installiert</small><br>
+        <strong id="cur-ver">...</strong>
+      </div>
+      <div>
+        <small>Neueste Version (GitHub)</small><br>
+        <strong id="lat-ver">–</strong>
+        <span id="ver-badge" class="badge badge-unk" style="margin-left:6px">–</span>
+      </div>
+      <button class="btn-ghost" style="width:auto;padding:8px 18px" onclick="checkUpdate()">Prüfen</button>
+    </div>
+    <div id="update-info">
+      <hr class="divider">
+      <p id="update-text"></p>
+      <a id="update-link" href="#" target="_blank" style="display:none">
+        &#11015; Release-Seite öffnen &rarr;
+      </a>
+    </div>
   </div>
-</div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       Karte 2: Firmware flashen
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="card">
+    <h2>&#128190; Firmware flashen</h2>
+    <p>Datei: <strong>barbot-firmware.bin</strong> aus dem GitHub Release hochladen (~1 MB).</p>
+    <input type="file" id="fw-file" accept=".bin">
+    <button id="fw-btn" onclick="uploadFirmware()">Firmware flashen</button>
+    <div class="bar-wrap" id="fw-bar"><div class="bar-fill" id="fw-fill"></div></div>
+    <div class="status" id="fw-status"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       Karte 3: Dateisystem flashen (LittleFS)
+  ═══════════════════════════════════════════════════════════════ -->
+  <div class="card">
+    <h2>&#128194; Dateisystem flashen (LittleFS)</h2>
+    <div class="warn-box">
+      <p>&#9888; Nur nötig wenn sich Webseiten-Dateien geändert haben.<br>
+         Alle hochgeladenen <strong>Bilder</strong> (Getränkefotos, Hintergrundbild)
+         werden dabei gelöscht und müssen neu hochgeladen werden.<br>
+         Einstellungen (WLAN, MQTT, Getränkenamen) bleiben erhalten.</p>
+    </div>
+    <p>Datei: <strong>barbot-littlefs.bin</strong> aus dem GitHub Release hochladen (~1,4 MB).</p>
+    <input type="file" id="fs-file" accept=".bin">
+    <button id="fs-btn" onclick="uploadFilesystem()">Dateisystem flashen</button>
+    <div class="bar-wrap" id="fs-bar"><div class="bar-fill" id="fs-fill"></div></div>
+    <div class="status" id="fs-status"></div>
+  </div>
+
+</div><!-- /container -->
+
 <script>
-function upload() {
-  const f = document.getElementById('bin').files[0];
-  if(!f) { alert('Bitte zuerst eine .bin Datei auswählen'); return; }
-  const btn = document.getElementById('btn');
-  const st  = document.getElementById('status');
-  const bar = document.getElementById('bar');
-  const fill= document.getElementById('fill');
+// ─────────────────────────────────────────────
+// Update-Check: ESP32 Version + GitHub Releases
+// ─────────────────────────────────────────────
+async function checkUpdate() {
+  const curEl  = document.getElementById('cur-ver');
+  const latEl  = document.getElementById('lat-ver');
+  const badge  = document.getElementById('ver-badge');
+  const info   = document.getElementById('update-info');
+  const text   = document.getElementById('update-text');
+  const link   = document.getElementById('update-link');
+
+  curEl.textContent = '...';
+  latEl.textContent = '...';
+  badge.textContent = '...';
+  badge.className   = 'badge badge-unk';
+  info.style.display = 'none';
+
+  // 1. Aktuelle Version vom ESP32 holen
+  let current = 'unbekannt';
+  try {
+    const r = await fetch('/api/version');
+    const d = await r.json();
+    current = d.version || 'unbekannt';
+    curEl.textContent = current;
+  } catch(e) {
+    curEl.textContent = 'Fehler';
+    return;
+  }
+
+  // 2. Neueste GitHub-Version holen (Client-seitig, kein HTTPS auf ESP32 nötig)
+  let latest = null;
+  let releaseUrl = '#';
+  try {
+    const r = await fetch('https://api.github.com/repos/FabBo23/Barbot/releases/latest',
+                          { headers: { 'Accept': 'application/vnd.github+json' } });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    latest = d.tag_name;
+    releaseUrl = d.html_url;
+  } catch(e) {
+    latEl.textContent = 'Nicht erreichbar';
+    badge.textContent = '?';
+    badge.className   = 'badge badge-unk';
+    info.style.display = 'block';
+    text.textContent = 'GitHub konnte nicht erreicht werden. ' +
+                       'Prüfe die Internetverbindung des Browsers.';
+    return;
+  }
+
+  latEl.textContent = latest;
+  info.style.display = 'block';
+
+  if (current === latest) {
+    badge.textContent = 'Aktuell';
+    badge.className   = 'badge badge-ok';
+    text.textContent  = '✓ Du verwendest bereits die neueste Version.';
+    link.style.display = 'none';
+  } else {
+    badge.textContent = 'Update!';
+    badge.className   = 'badge badge-new';
+    text.textContent  = 'Neue Version verfügbar! Lade barbot-firmware.bin und ggf. ' +
+                        'barbot-littlefs.bin aus dem Release herunter und flashe sie unten.';
+    link.href = releaseUrl;
+    link.style.display = 'block';
+  }
+}
+
+// ─────────────────────────────────────────────
+// Upload-Helfer (generisch für Firmware + FS)
+// ─────────────────────────────────────────────
+function doUpload(fileId, btnId, barId, fillId, statusId, endpoint, successMsg) {
+  const f    = document.getElementById(fileId).files[0];
+  const btn  = document.getElementById(btnId);
+  const bar  = document.getElementById(barId);
+  const fill = document.getElementById(fillId);
+  const st   = document.getElementById(statusId);
+
+  if (!f) { alert('Bitte zuerst eine .bin Datei auswählen'); return; }
+
   btn.disabled = true;
   bar.style.display = 'block';
-  st.className = 'ok'; st.style.display = 'block'; st.textContent = 'Upload läuft...';
+  st.className = 'status ok'; st.style.display = 'block';
+  st.textContent = 'Upload läuft...';
+  fill.style.width = '0%';
+
   const fd = new FormData();
-  fd.append('firmware', f, f.name);
+  fd.append('file', f, f.name);
+
   const xhr = new XMLHttpRequest();
-  xhr.open('POST', '/api/ota', true);
+  xhr.open('POST', endpoint, true);
+
   xhr.upload.onprogress = e => {
-    if(e.lengthComputable) {
+    if (e.lengthComputable) {
       const p = Math.round(e.loaded / e.total * 100);
       fill.style.width = p + '%';
       st.textContent = 'Upload: ' + p + '%';
     }
   };
+
   xhr.onload = () => {
-    if(xhr.status === 200) {
-      st.className = 'ok';
+    if (xhr.status === 200) {
       fill.style.width = '100%';
-      st.textContent = '✓ Erfolgreich! BarBot startet in 3s neu...';
+      st.className = 'status ok';
+      st.textContent = successMsg;
     } else {
-      st.className = 'err';
-      st.textContent = 'Fehler: ' + xhr.responseText;
+      st.className = 'status err';
+      st.textContent = 'Fehler (' + xhr.status + '): ' + xhr.responseText;
       btn.disabled = false;
     }
   };
+
   xhr.onerror = () => {
-    st.className = 'err';
-    st.textContent = 'Verbindung verloren – BarBot startet möglicherweise neu.';
+    st.className = 'status warn';
+    st.textContent = 'Verbindung unterbrochen – BarBot startet wahrscheinlich neu. ' +
+                     'Warte ca. 10 Sekunden und lade die Seite neu.';
   };
+
   xhr.send(fd);
 }
+
+function uploadFirmware() {
+  doUpload('fw-file', 'fw-btn', 'fw-bar', 'fw-fill', 'fw-status',
+           '/api/ota',
+           '✓ Firmware erfolgreich! BarBot startet in wenigen Sekunden neu...');
+}
+
+function uploadFilesystem() {
+  doUpload('fs-file', 'fs-btn', 'fs-bar', 'fs-fill', 'fs-status',
+           '/api/ota-fs',
+           '✓ Dateisystem erfolgreich! BarBot startet neu – Bilder bitte neu hochladen.');
+}
+
+// Beim Laden sofort aktuelle Version anzeigen
+fetch('/api/version').then(r => r.json()).then(d => {
+  document.getElementById('cur-ver').textContent = d.version || '?';
+}).catch(() => {
+  document.getElementById('cur-ver').textContent = '?';
+});
 </script>
 </body>
 </html>
