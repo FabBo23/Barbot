@@ -19,7 +19,7 @@ Der BarBot nimmt bis zu 12 Gläser in einer U-förmigen Anordnung auf. Ein Servo
 
 | Datei | Beschreibung |
 |-------|--------------|
-| `BarBot_v3_10_kommentare_anleitung.ino` | Hauptprogramm: Zustandsmaschine, Button, Screensaver, Flaschenlogik |
+| `Barbot.ino` | Hauptprogramm: Zustandsmaschine, Button, Screensaver, Flaschenlogik |
 | `DrinkMachine.h` | Hardware-Abstraktion: Servo, Pumpen, LEDs, UART-Display, NVS |
 | `Connectivity.h` | WiFi, Webserver (async), WebSocket, MQTT, OTA |
 | `config.h` | Alle Pin-Definitionen und Zeitkonstanten |
