@@ -807,6 +807,54 @@ class Connectivity {
         } else request->send(400, "text/plain", "Bad Args");
       });
 
+      // --- Versions-Info ---
+      server.on("/api/version", HTTP_GET, [](AsyncWebServerRequest *request){
+          String json = "{\"version\":\"" FIRMWARE_VERSION "\","
+                        "\"repo\":\"FabBo23/Barbot\"}";
+          request->send(200, "application/json", json);
+      });
+
+      // --- OTA Dateisystem-Update (LittleFS) ---
+      // LittleFS wird vor dem Flash-Vorgang ausgehängt und nach dem Neustart
+      // automatisch neu gemountet.
+      server.on("/api/ota-fs", HTTP_POST,
+        [](AsyncWebServerRequest *request){
+            if(Update.hasError()) {
+                String err = Update.errorString();
+                Serial.printf("[OTA-FS] FEHLER: %s\n", err.c_str());
+                request->send(500, "text/plain", err);
+            } else {
+                Serial.println("[OTA-FS] Erfolgreich – starte neu");
+                request->send(200, "text/plain", "OK");
+                delay(500);
+                ESP.restart();
+            }
+        },
+        [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
+            if(index == 0) {
+                Serial.printf("[OTA-FS] Start: %s\n", filename.c_str());
+                LittleFS.end();  // Unmount vor dem Flashen zwingend nötig
+                if(!Update.begin(UPDATE_SIZE_UNKNOWN, U_SPIFFS)) {
+                    Serial.printf("[OTA-FS] begin() Fehler: %s\n", Update.errorString());
+                    return;
+                }
+            }
+            if(Update.isRunning()) {
+                size_t written = Update.write(data, len);
+                if(written != len) {
+                    Serial.printf("[OTA-FS] write() Fehler: %s\n", Update.errorString());
+                }
+            }
+            if(final) {
+                if(Update.end(true)) {
+                    Serial.printf("[OTA-FS] Fertig: %u Bytes\n", index + len);
+                } else {
+                    Serial.printf("[OTA-FS] end() Fehler: %s\n", Update.errorString());
+                }
+            }
+        }
+      );
+
       // --- OTA Firmware Update ---
       server.on("/ota", HTTP_GET, [](AsyncWebServerRequest *request){
           if(LittleFS.exists("/ota.html"))
