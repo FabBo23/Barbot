@@ -1,6 +1,6 @@
 # BarBot – Technische Dokumentation
 
-Automatischer Cocktailbar-Roboter auf Basis eines ESP32.
+Automatischer Schnaps-Roboter auf Basis eines ESP32 – ausschließlich für Schnaps, keine Mischgetränke.
 Steuert 3 Pumpen und einen Servoarm zum Befüllen von bis zu 12 Gläsern in einer halbkreisförmigen Anordnung.
 
 ---
@@ -19,7 +19,7 @@ Der BarBot nimmt bis zu 12 Gläser in einer U-förmigen Anordnung auf. Ein Servo
 
 | Datei | Beschreibung |
 |-------|--------------|
-| `BarBot_v3_6_Sperre.ino` | Hauptprogramm: Zustandsmaschine, Button, Screensaver, Flaschenlogik |
+| `BarBot_v3_10_kommentare_anleitung.ino` | Hauptprogramm: Zustandsmaschine, Button, Screensaver, Flaschenlogik |
 | `DrinkMachine.h` | Hardware-Abstraktion: Servo, Pumpen, LEDs, UART-Display, NVS |
 | `Connectivity.h` | WiFi, Webserver (async), WebSocket, MQTT, OTA |
 | `config.h` | Alle Pin-Definitionen und Zeitkonstanten |

@@ -169,8 +169,6 @@ bool readSerialLine() {
 
 // Aktualisiert alle dynamischen Elemente der Halbkreis-Seite (Seite 6):
 // Getränkenamen-Buttons, Farb-Highlighting, Positionskreise.
-// Aktualisiert alle dynamischen Elemente der Halbkreis-Seite (Seite 6):
-// Getränkenamen-Buttons, Farb-Highlighting, Positionskreise.
 void updateSemiCirclePage() {
   // Getränkenamen auf "Alle"-Buttons (max. 9 Zeichen damit sie reinpassen)
   String n0 = bot.drinkNames[0]; if (n0.length() > 9) n0 = n0.substring(0, 9);
@@ -454,11 +452,9 @@ void checkCommands() {
       // Echter Touch-Befehl → Display aufwecken und Command ausführen
       wakeDisplay();
       handleCommand(cmd);
-    } else {
-      // Kein Touch (z.B. "HASP online" oder Fehler-Log) →
-      // Timer trotzdem zurücksetzen, solange Display aktiv ist
-      if (!screensaverActive) lastActivityTime = millis();
     }
+    // Nicht-Touch-Meldungen (Logs, Fehler) dürfen den Inaktivitäts-Timer
+    // NICHT zurücksetzen – sonst startet der Screensaver nie.
 
     // openHASP sendet beim Verbinden: "HASP online 192.168.x.x"
     // → IP merken und Display-Inhalte neu aufbauen
@@ -479,8 +475,14 @@ void checkCommands() {
 
   // Web-/MQTT-Anfragen aus Connectivity abholen
   net.loop();
-  if (net.getStartReq() && currentState == IDLE && !waitingForGlassRemoval) currentState = POURING_SEQUENCE;
-  if (net.getStopReq()) stopRequested = true;
+  if (net.getStartReq() && currentState == IDLE && !waitingForGlassRemoval) {
+    wakeDisplay();
+    currentState = POURING_SEQUENCE;
+  }
+  if (net.getStopReq()) {
+    wakeDisplay();
+    stopRequested = true;
+  }
 }
 
 // =============================================================================
@@ -545,6 +547,7 @@ void loop() {
     if (reading != buttonState) {
       buttonState = reading;
       if (buttonState == HIGH && !buttonHeld) {
+        wakeDisplay();
         if (currentState == IDLE) {
           if (waitingForGlassRemoval) {
             // Kurzer Druck waehrend Glasentnahme-Sperre: Feedback anzeigen

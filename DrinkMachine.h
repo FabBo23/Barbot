@@ -164,12 +164,14 @@ class DrinkMachine {
     // -------------------------------------------------------------------------
 
     void resetDrinkNames() {
-      prefs.begin("barbot", false);
-      prefs.clear();
-      prefs.end();
       drinkNames[0] = "Getraenk 1";
       drinkNames[1] = "Getraenk 2";
       drinkNames[2] = "Getraenk 3";
+      prefs.begin("barbot", false);
+      prefs.putString("d1", drinkNames[0]);
+      prefs.putString("d2", drinkNames[1]);
+      prefs.putString("d3", drinkNames[2]);
+      prefs.end();
     }
 
     void saveDrinkName(int index, String name) {
@@ -405,7 +407,7 @@ class DrinkMachine {
       }
       // --- Seite 9: Screensaver – jeder Touch weckt ---
       else if (page == 9) {
-        if (id == 2) return CMD_HOME;
+        return CMD_HOME;  // Beliebiger Touch beendet den Screensaver
       }
       // --- Seite 11: Überschreib-Bestätigung (kein msgbox, echter Dialog) ---
       else if (page == 11) {
