@@ -1,0 +1,99 @@
+{"page": 0, "id": 0, "obj": "obj", "bg_color": "#1a1a1a"}
+{"page": 1, "id": 1, "obj": "img", "src": "L:/bg.bin", "x": 0, "y": 0, "w": 320, "h": 240, "opacity": 120}
+{"page": 1, "id": 2, "obj": "label", "x": 0, "y": 0, "w": 320, "h": 30, "text": "BARBOT", "align": "center", "bg_color": "#FF6600", "text_color": "#FFFFFF", "pad_left": 10}
+{"page": 1, "id": 3, "obj": "btn", "action": {"down": "page 3"}, "x": 240, "y": 0, "w": 80, "h": 30, "text": "SETUP", "text_font": 16, "bg_color": "#333333", "radius": 0, "border_width": 0, "opacity": 50}
+{"page": 1, "id": 10, "obj": "img", "x": 90, "y": 80, "w": 140, "h": 90, "src": "L:/drink0.bin", "auto_size": false, "opacity": 180}
+{"page": 1, "id": 11, "obj": "label", "x": 0, "y": 30, "w": 320, "h": 40, "text": "Getraenk 1", "align": "center", "text_font": 30, "text_color": "#0044FF"}
+{"page": 1, "id": 20, "obj": "btn", "x": 10, "y": 80, "w": 60, "h": 60, "text": "<", "text_font": 32, "bg_color": "#444444", "opacity": 128, "radius": 20}
+{"page": 1, "id": 21, "obj": "btn", "x": 250, "y": 80, "w": 60, "h": 60, "text": ">", "text_font": 32, "bg_color": "#444444", "opacity": 128, "radius": 20}
+{"page": 1, "id": 30, "obj": "btn", "x": 80, "y": 190, "w": 160, "h": 35, "text": "AUSSCHENKEN", "bg_color": "#00AA00", "text_color": "#FFFFFF", "radius": 20, "opacity": 128}
+{"page": 1, "id": 50, "obj": "btn", "action": {"down": "page 4"}, "x": 0, "y": 0, "w": 80, "h": 30, "text": "no WiFi", "text_font": 16, "bg_color": "#333333", "radius": 0, "border_width": 0, "opacity": 0}
+{"page": 1, "id": 60, "obj": "label", "x": 0, "y": 170, "w": 320, "h": 18, "text": "", "align": 1, "text_font": 12, "text_color": "#000000", "bg_color": "#f97316", "radius": 0, "opacity": 0}
+{"page": 2, "id": 1, "obj": "label", "x": 0, "y": 10, "w": 320, "h": 40, "text": "BITTE WARTEN...", "align": 1, "text_font": 24}
+{"page": 2, "id": 2, "obj": "img", "src": "L:/bg.bin", "x": 0, "y": 0, "w": 320, "h": 240, "opacity": 120}
+{"page": 2, "id": 10, "obj": "label", "x": 20, "y": 60, "w": 280, "h": 30, "text": "...", "align": 1, "text_color": "#AAAAAA"}
+{"page": 2, "id": 20, "obj": "bar", "x": 40, "y": 100, "w": 240, "h": 20, "val": 0, "max": 12, "bg_color": "#333333", "val_color": "#FF6600"}
+{"page": 2, "id": 30, "obj": "btn", "x": 100, "y": 160, "w": 120, "h": 40, "text": "STOPP", "bg_color": "#AA0000"}
+{"page": 3, "id": 1, "obj": "label", "x": 0, "y": 0, "w": 320, "h": 35, "text": "EINSTELLUNGEN", "align": 1, "bg_color": "#1e293b", "text_color": "#38bdf8"}
+{"page": 3, "id": 2, "obj": "btn", "x": 0, "y": 0, "w": 50, "h": 35, "text": "<", "bg_color": "#1e293b", "text_color": "#38bdf8", "border_width": 0}
+{"page": 3, "id": 5, "obj": "label", "x": 0, "y": 38, "w": 155, "h": 18, "text": "Bot: ---", "align": "left", "text_font": 12, "text_color": "#38bdf8", "bg_opa": 0}
+{"page": 3, "id": 6, "obj": "label", "x": 165, "y": 38, "w": 155, "h": 18, "text": "Disp: ---", "align": "right", "text_font": 12, "text_color": "#64748b", "bg_opa": 0}
+{"page": 3, "id": 7, "obj": "label", "x": 0, "y": 58, "w": 320, "h": 18, "text": "MQTT: ---", "align": 1, "text_font": 12, "text_color": "#64748b", "bg_opa": 0}
+{"page": 3, "id": 10, "obj": "btn", "x": 20, "y": 170, "w": 135, "h": 26, "text": "Getraenke Reset", "bg_color": "#475569", "border_width": 0, "radius": 6}
+{"page": 3, "id": 20, "obj": "btn", "x": 165, "y": 170, "w": 135, "h": 26, "text": "WLAN Reset", "bg_color": "#475569", "border_width": 0, "radius": 6}
+{"page": 3, "id": 30, "obj": "btn", "x": 165, "y": 199, "w": 135, "h": 26, "text": "Neustart", "bg_color": "#ef4444", "border_width": 0, "radius": 6, "text_font": 16}
+{"page": 3, "id": 35, "obj": "btn", "x": 20, "y": 141, "w": 135, "h": 26, "text": "Ansicht: Klass.", "bg_color": "#1e293b", "border_color": "#334155", "border_width": 1, "radius": 6}
+{"page": 3, "id": 36, "obj": "btn", "x": 165, "y": 141, "w": 135, "h": 26, "text": "Disp-WiFi: AN", "bg_color": "#1e293b", "border_color": "#334155", "border_width": 1, "radius": 6}
+{"page": 3, "id": 37, "obj": "btn", "x": 20, "y": 110, "w": 280, "h": 28, "text": "Fuellmenge: 2.0cl", "bg_color": "#1e293b", "border_color": "#334155", "border_width": 1, "radius": 6}
+{"page": 3, "id": 40, "obj": "btn", "x": 20, "y": 79, "w": 280, "h": 28, "text": "Schlauch Befuellen", "bg_color": "#0284c7", "radius": 6, "border_width": 0}
+{"page": 3, "id": 98, "obj": "btn", "action": {"down": "page 10"}, "x": 240, "y": 0, "w": 80, "h": 35, "text": "Web QR", "bg_color": "#0284c7", "text_color": "#FFF", "border_width": 0}
+{"page": 3, "id": 99, "obj": "btn", "x": 20, "y": 199, "w": 135, "h": 26, "text": "Handy Koppeln", "bg_color": "#0284c7", "border_width": 0, "radius": 6}
+{"page": 4, "id": 1, "obj": "label", "x": 0, "y": 0, "w": 320, "h": 30, "text": "WiFi Setup", "align": 1, "bg_color": "#AA0000", "text_color": "#FFF"}
+{"page": 4, "id": 2, "obj": "label", "x": 0, "y": 35, "w": 320, "h": 20, "text": "SSID: Barbot  Pass: barbot123", "align": 1, "text_font": 14, "text_color": "#FFAA00"}
+{"page": 4, "id": 3, "obj": "qrcode", "x": 85, "y": 60, "w": 150, "h": 150, "text": "WIFI:S:Barbot;T:WPA;P:barbot123;;", "scale": 4, "bg_color": "#FFFFFF", "text_color": "#000000"}
+{"page": 4, "id": 4, "obj": "label", "x": 0, "y": 215, "w": 320, "h": 25, "text": "192.168.4.1 im Browser oeffnen", "align": 1, "text_font": 14, "text_color": "#AAAAAA"}
+{"page": 4, "id": 5, "obj": "btn", "action": {"down": "page 1"}, "x": 0, "y": 0, "w": 50, "h": 30, "text": "<", "bg_color": "#AA0000", "border_width": 0}
+{"page": 5, "id": 1, "obj": "label", "x": 0, "y": 0, "w": 320, "h": 35, "text": "SCHLAUCH BEFUELLEN", "align": 1, "bg_color": "#005588", "text_color": "#FFF"}
+{"page": 5, "id": 2, "obj": "btn", "x": 0, "y": 0, "w": 50, "h": 35, "text": "<", "bg_color": "#005588", "border_width": 0}
+{"page": 5, "id": 3, "obj": "label", "x": 0, "y": 38, "w": 320, "h": 20, "text": "Glas einlegen = Pumpe laeuft", "align": 1, "text_font": 14, "text_color": "#AAAAAA"}
+{"page": 5, "id": 10, "obj": "obj", "x": 5, "y": 60, "w": 95, "h": 90, "bg_color": "#001166", "radius": 8, "border_width": 0}
+{"page": 5, "id": 11, "obj": "label", "x": 5, "y": 63, "w": 95, "h": 25, "text": "Getraenk 1", "align": 1, "text_font": 14, "text_color": "#FFFFFF", "bg_opa": 0}
+{"page": 5, "id": 12, "obj": "label", "x": 5, "y": 88, "w": 95, "h": 20, "text": "Pos 1", "align": 1, "text_font": 14, "text_color": "#AAAAAA", "bg_opa": 0}
+{"page": 5, "id": 13, "obj": "label", "x": 5, "y": 110, "w": 95, "h": 35, "text": "Bereit", "align": 1, "text_font": 16, "text_color": "#44FF44", "bg_opa": 0}
+{"page": 5, "id": 20, "obj": "obj", "x": 113, "y": 60, "w": 95, "h": 90, "bg_color": "#550000", "radius": 8, "border_width": 0}
+{"page": 5, "id": 21, "obj": "label", "x": 113, "y": 63, "w": 95, "h": 25, "text": "Getraenk 2", "align": 1, "text_font": 14, "text_color": "#FFFFFF", "bg_opa": 0}
+{"page": 5, "id": 22, "obj": "label", "x": 113, "y": 88, "w": 95, "h": 20, "text": "Pos 6", "align": 1, "text_font": 14, "text_color": "#AAAAAA", "bg_opa": 0}
+{"page": 5, "id": 23, "obj": "label", "x": 113, "y": 110, "w": 95, "h": 35, "text": "Bereit", "align": 1, "text_font": 16, "text_color": "#44FF44", "bg_opa": 0}
+{"page": 5, "id": 30, "obj": "obj", "x": 220, "y": 60, "w": 95, "h": 90, "bg_color": "#444400", "radius": 8, "border_width": 0}
+{"page": 5, "id": 31, "obj": "label", "x": 220, "y": 63, "w": 95, "h": 25, "text": "Getraenk 3", "align": 1, "text_font": 14, "text_color": "#FFFFFF", "bg_opa": 0}
+{"page": 5, "id": 32, "obj": "label", "x": 220, "y": 88, "w": 95, "h": 20, "text": "Pos 12", "align": 1, "text_font": 14, "text_color": "#AAAAAA", "bg_opa": 0}
+{"page": 5, "id": 33, "obj": "label", "x": 220, "y": 110, "w": 95, "h": 35, "text": "Bereit", "align": 1, "text_font": 16, "text_color": "#44FF44", "bg_opa": 0}
+{"page": 5, "id": 40, "obj": "label", "x": 0, "y": 158, "w": 320, "h": 30, "text": "Bereit - warte auf Glas...", "align": 1, "text_font": 14, "text_color": "#FFFFFF"}
+{"page": 5, "id": 50, "obj": "btn", "x": 80, "y": 195, "w": 160, "h": 40, "text": "STOP", "bg_color": "#AA0000", "text_color": "#FFFFFF", "radius": 20}
+{"page": 6, "id": 1, "obj": "img", "src": "L:/bg.bin", "x": 0, "y": 0, "w": 320, "h": 240, "opacity": 120}
+{"page": 6, "id": 2, "obj": "label", "x": 2, "y": 10, "w": 28, "h": 18, "text": "WiFi", "text_font": 12, "text_color": "#44ff44", "bg_color": "#1a1a2e", "opacity": 128}
+{"page": 6, "id": 6, "obj": "btn", "x": 100, "y": 105, "w": 120, "h": 45, "text": "AUSSCHENKEN", "text_font": 16, "bg_color": "#00AA00", "text_color": "#FFFFFF", "radius": 20, "opacity": 140}
+{"page": 6, "id": 7, "obj": "btn", "action": {"down": "page 3"}, "x": 240, "y": 0, "w": 80, "h": 30, "text": "SETUP", "text_font": 16, "bg_color": "#333333", "radius": 0, "border_width": 0, "opacity": 50}
+{"page": 6, "id": 8, "obj": "btn", "action": {"down": "page 4"}, "x": 0, "y": 0, "w": 32, "h": 40, "text": "", "bg_color": "#1a1a2e", "border_width": 0, "opacity": 0}
+{"page": 6, "id": 10, "obj": "btn", "x": 8, "y": 83, "w": 34, "h": 34, "radius": 17, "text": "1", "text_font": 12, "bg_color": "#444444", "opacity": 128}
+{"page": 6, "id": 11, "obj": "btn", "x": 14, "y": 115, "w": 34, "h": 34, "radius": 17, "text": "2", "text_font": 12, "bg_color": "#444444", "opacity": 128}
+{"page": 6, "id": 12, "obj": "btn", "x": 30, "y": 145, "w": 34, "h": 34, "radius": 17, "text": "3", "text_font": 12, "bg_color": "#444444", "opacity": 128}
+{"page": 6, "id": 13, "obj": "btn", "x": 55, "y": 170, "w": 34, "h": 34, "radius": 17, "text": "4", "text_font": 12, "bg_color": "#444444", "opacity": 128}
+{"page": 6, "id": 14, "obj": "btn", "x": 87, "y": 187, "w": 34, "h": 34, "radius": 17, "text": "5", "text_font": 12, "bg_color": "#444444", "opacity": 128}
+{"page": 6, "id": 15, "obj": "btn", "x": 124, "y": 196, "w": 34, "h": 34, "radius": 17, "text": "6", "text_font": 12, "bg_color": "#444444", "opacity": 128}
+{"page": 6, "id": 16, "obj": "btn", "x": 162, "y": 196, "w": 34, "h": 34, "radius": 17, "text": "7", "text_font": 12, "bg_color": "#444444", "opacity": 128}
+{"page": 6, "id": 17, "obj": "btn", "x": 199, "y": 187, "w": 34, "h": 34, "radius": 17, "text": "8", "text_font": 12, "bg_color": "#444444", "opacity": 128}
+{"page": 6, "id": 18, "obj": "btn", "x": 231, "y": 170, "w": 34, "h": 34, "radius": 17, "text": "9", "text_font": 12, "bg_color": "#444444", "opacity": 128}
+{"page": 6, "id": 19, "obj": "btn", "x": 256, "y": 145, "w": 34, "h": 34, "radius": 17, "text": "10", "text_font": 12, "bg_color": "#444444", "opacity": 128}
+{"page": 6, "id": 20, "obj": "btn", "x": 272, "y": 115, "w": 34, "h": 34, "radius": 17, "text": "11", "text_font": 12, "bg_color": "#444444", "opacity": 128}
+{"page": 6, "id": 21, "obj": "btn", "x": 278, "y": 83, "w": 34, "h": 34, "radius": 17, "text": "12", "text_font": 12, "bg_color": "#444444", "opacity": 128}
+{"page": 6, "id": 22, "obj": "btn", "x": 40, "y": 40, "w": 40, "h": 40, "text": "<", "text_font": 16, "bg_color": "#444444", "radius": 6, "opacity": 128}
+{"page": 6, "id": 23, "obj": "btn", "x": 240, "y": 40, "w": 40, "h": 40, "text": ">", "text_font": 16, "bg_color": "#444444", "radius": 6, "opacity": 128}
+{"page": 6, "id": 24, "obj": "label", "x": 80, "y": 40, "w": 160, "h": 40, "text": "Getraenk 1", "text_font": 30, "text_color": "#FFFFFF", "bg_color": "#0044FF", "radius": 6, "align": "center", "opacity": 160}
+{"page": 6, "id": 60, "obj": "label", "x": 0, "y": 218, "w": 320, "h": 20, "text": "", "align": 1, "text_font": 12, "text_color": "#000000", "bg_color": "#f97316", "radius": 0, "opacity": 0}
+{"page": 7, "id": 1, "obj": "img", "src": "L:/bg.bin", "x": 0, "y": 0, "w": 320, "h": 240, "opacity": 120}
+{"page": 7, "id": 2, "obj": "label", "x": 10, "y": 6, "w": 300, "h": 30, "text": "Pos ? - Getraenk:", "text_font": 16, "text_color": "#FFFFFF", "bg_color": "#0a0a1e", "align": 1}
+{"page": 7, "id": 3, "obj": "btn", "x": 20, "y": 40, "w": 280, "h": 40, "text": "Getraenk 1", "text_font": 18, "bg_color": "#0044FF", "radius": 8, "opacity": 128}
+{"page": 7, "id": 4, "obj": "btn", "x": 20, "y": 88, "w": 280, "h": 40, "text": "Getraenk 2", "text_font": 18, "bg_color": "#CC1100", "radius": 8, "opacity": 128}
+{"page": 7, "id": 5, "obj": "btn", "x": 20, "y": 136, "w": 280, "h": 40, "text": "Getraenk 3", "text_font": 18, "bg_color": "#998800", "radius": 8, "opacity": 128}
+{"page": 7, "id": 6, "obj": "btn", "x": 20, "y": 184, "w": 135, "h": 40, "text": "Leer", "text_font": 12, "bg_color": "#555555", "radius": 4}
+{"page": 7, "id": 7, "obj": "btn", "x": 165, "y": 184, "w": 135, "h": 40, "text": "Abbrechen", "text_font": 12, "bg_color": "#333333", "radius": 4}
+{"page": 8, "id": 1, "obj": "label", "x": 0, "y": 0, "w": 320, "h": 35, "text": "FUELLMENGE", "align": 1, "bg_color": "#2a4a2a", "text_color": "#FFF"}
+{"page": 8, "id": 2, "obj": "btn", "x": 0, "y": 0, "w": 50, "h": 35, "text": "<", "bg_color": "#2a4a2a", "border_width": 0}
+{"page": 8, "id": 3, "obj": "btn", "x": 170, "y": 155, "w": 120, "h": 55, "text": "+ 0.5cl", "text_font": 20, "bg_color": "#005500", "radius": 10}
+{"page": 8, "id": 4, "obj": "btn", "x": 30, "y": 155, "w": 120, "h": 55, "text": "- 0.5cl", "text_font": 20, "bg_color": "#550000", "radius": 10}
+{"page": 8, "id": 10, "obj": "label", "x": 60, "y": 75, "w": 200, "h": 60, "text": "2.0 cl", "align": "center", "text_font": 32, "text_color": "#FF9800"}
+{"page": 8, "id": 20, "obj": "label", "x": 0, "y": 50, "w": 320, "h": 20, "text": "Einschenkmenge pro Glas", "align": "center", "text_font": 14, "text_color": "#AAAAAA"}
+{"page": 9, "id": 0, "obj": "obj", "bg_color": "#000000"}
+{"page": 9, "id": 1, "obj": "img", "x": 20, "y": 20, "w": 140, "h": 90, "src": "L:/drink0.bin", "auto_size": false}
+{"page": 9, "id": 2, "obj": "btn", "x": 0, "y": 0, "w": 320, "h": 240, "text": "", "bg_color": "#000000", "border_width": 0, "radius": 0, "opacity": 0}
+{"page": 10, "id": 1, "obj": "label", "x": 0, "y": 0, "w": 320, "h": 30, "text": "Web-App Zugang", "align": 1, "bg_color": "#0284c7", "text_color": "#FFF"}
+{"page": 10, "id": 2, "obj": "label", "x": 0, "y": 35, "w": 320, "h": 20, "text": "Scanne den Code zum Bestellen:", "align": 1, "text_font": 14, "text_color": "#38bdf8"}
+{"page": 10, "id": 3, "obj": "qrcode", "x": 85, "y": 60, "w": 150, "h": 150, "text": "https://barbot.duckdns.org/?code=party123", "scale": 4, "bg_color": "#FFFFFF", "text_color": "#000000"}
+{"page": 10, "id": 4, "obj": "label", "x": 0, "y": 215, "w": 320, "h": 25, "text": "Nur mit diesem Code klappt der Login!", "align": 1, "text_font": 14, "text_color": "#AAAAAA"}
+{"page": 10, "id": 5, "obj": "btn", "action": {"down": "page 3"}, "x": 0, "y": 0, "w": 50, "h": 30, "text": "<", "bg_color": "#0284c7", "border_width": 0}
+{"page": 11, "id": 0, "obj": "obj", "bg_color": "#0a0a1e"}
+{"page": 11, "id": 1, "obj": "label", "x": 10, "y": 50, "w": 300, "h": 32, "text": "Achtung!", "text_font": 24, "text_color": "#f97316", "align": 1, "bg_opa": 0}
+{"page": 11, "id": 2, "obj": "label", "x": 20, "y": 90, "w": 280, "h": 55, "text": "Slot-Auswahl überschreiben?", "text_font": 16, "text_color": "#f8fafc", "align": 1, "bg_opa": 0}
+{"page": 11, "id": 10, "obj": "btn", "x": 20, "y": 158, "w": 130, "h": 52, "text": "Ja", "text_font": 24, "bg_color": "#10b981", "radius": 8}
+{"page": 11, "id": 20, "obj": "btn", "x": 170, "y": 158, "w": 130, "h": 52, "text": "Nein", "text_font": 24, "bg_color": "#475569", "radius": 8}
