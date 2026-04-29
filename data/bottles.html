@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flaschen-Füllstand – BarBot</title>
+<style>
+  :root{--bg:#0f172a;--card:#1e293b;--acc:#38bdf8;--txt:#f8fafc;--border:#334155;
+        --ok:#10b981;--warn:#f59e0b;--err:#ef4444;
+        --c0:#60a5fa;--c1:#f87171;--c2:#facc15}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--txt);
+       padding:20px;min-height:100vh}
+  .container{max-width:560px;margin:0 auto;padding-bottom:40px}
+  nav{display:flex;flex-wrap:wrap;gap:8px;background:rgba(0,0,0,.2);
+      padding:12px 16px;border-radius:12px;margin-bottom:24px}
+  nav a{color:var(--acc);text-decoration:none;font-weight:600;
+        padding:7px 12px;border-radius:6px;background:rgba(56,189,248,.1);
+        font-size:.9rem;white-space:nowrap}
+  nav a:hover{background:rgba(56,189,248,.2)}
+  h1{text-align:center;margin-bottom:6px}
+  .subtitle{text-align:center;color:#94a3b8;font-size:.875rem;margin-bottom:24px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+        padding:22px;margin-bottom:18px}
+  .card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+  .dot-0{background:var(--c0)} .dot-1{background:var(--c1)} .dot-2{background:var(--c2)}
+  .drink-name{font-size:1.1rem;font-weight:700}
+  .pct-badge{margin-left:auto;font-size:1.5rem;font-weight:800}
+  .pct-ok  {color:var(--ok)}
+  .pct-warn{color:var(--warn)}
+  .pct-err {color:var(--err)}
+
+  /* Fortschrittsbalken */
+  .bar-track{width:100%;height:18px;background:#0b1120;border-radius:9px;
+             overflow:hidden;border:1px solid var(--border);margin-bottom:14px}
+  .bar-fill{height:100%;border-radius:9px;transition:width .6s ease}
+  .fill-ok  {background:linear-gradient(90deg,#059669,#10b981)}
+  .fill-warn{background:linear-gradient(90deg,#b45309,#f59e0b)}
+  .fill-err {background:linear-gradient(90deg,#b91c1c,#ef4444)}
+
+  /* Details-Zeile */
+  .detail-row{display:flex;justify-content:space-between;align-items:center;
+              flex-wrap:wrap;gap:8px;margin-bottom:14px}
+  .detail-row span{font-size:.875rem;color:#94a3b8}
+  .detail-row strong{color:var(--txt)}
+
+  /* Flaschengröße */
+  .size-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .size-row label{font-size:.85rem;color:#94a3b8;white-space:nowrap}
+  select{background:#0b1120;color:var(--txt);border:1px solid var(--border);
+         border-radius:6px;padding:7px 10px;font-size:.9rem;cursor:pointer;flex:1}
+  select:focus{outline:none;border-color:var(--acc)}
+
+  /* Buttons */
+  .btn-row{display:flex;gap:10px}
+  button{flex:1;padding:10px;border:none;border-radius:8px;font-size:.9rem;
+         font-weight:600;cursor:pointer;transition:background .2s}
+  .btn-save{background:var(--acc);color:#000}
+  .btn-save:hover{background:#0284c7;color:#fff}
+  .btn-reset{background:transparent;border:1px solid var(--border);color:#94a3b8}
+  .btn-reset:hover{background:rgba(239,68,68,.15);border-color:var(--err);color:#f87171}
+  button:disabled{opacity:.5;cursor:not-allowed}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+         background:#1e293b;border:1px solid var(--border);color:var(--txt);
+         padding:10px 20px;border-radius:8px;font-size:.9rem;display:none;
+         box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:99}
+  .toast.show{display:block}
+
+  .cal-row{display:flex;justify-content:space-between;
+           border-top:1px solid var(--border);padding-top:14px;margin-top:4px}
+  .cal-row span{font-size:.875rem;color:#94a3b8}
+  .cal-row strong{color:var(--txt)}
+</style>
+</head>
+<body>
+<div class="container">
+  <nav>
+    <a href="/">&larr; BarBot</a>
+    <a href="/settings">&#9881; Settings</a>
+    <a href="/ota">&#8635; Update</a>
+  </nav>
+
+  <h1>&#127868; Flaschen-Füllstand</h1>
+  <p class="subtitle">Zeigt wieviel von jeder Flasche noch vorhanden ist</p>
+
+  <div id="cards">
+    <!-- wird per JS befüllt -->
+    <div class="card" style="text-align:center;color:#94a3b8">Lade Daten...</div>
+  </div>
+
+  <div class="card cal-row" id="cal-card" style="display:none">
+    <span>Kalibrierung (ms&thinsp;/&thinsp;cl)</span>
+    <strong id="cal-val">–</strong>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SIZES = [250, 330, 500, 700, 1000, 1500];
+const COLORS = ['--c0','--c1','--c2'];
+const PUMPE  = ['Pumpe 1','Pumpe 2','Pumpe 3'];
+let currentData = null;
+
+function pct(b) {
+  if(!b.sizeMl || b.sizeMl === 0) return 0;
+  return Math.min(100, Math.round(b.dispensedMl * 100 / b.sizeMl));
+}
+function fillClass(p) {
+  return p >= 80 ? 'fill-err' : p >= 60 ? 'fill-warn' : 'fill-ok';
+}
+function pctClass(p) {
+  return p >= 80 ? 'pct-err' : p >= 60 ? 'pct-warn' : 'pct-ok';
+}
+function remaining(b) {
+  return Math.max(0, b.sizeMl - b.dispensedMl);
+}
+function toast(msg, err) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = err ? 'var(--err)' : 'var(--ok)';
+  t.className = 'toast show';
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+function buildCards(data) {
+  currentData = data;
+  const wrap = document.getElementById('cards');
+  wrap.innerHTML = '';
+
+  data.bottles.forEach((b, i) => {
+    const p = pct(b);
+    const remainMl = remaining(b);
+    const color = getComputedStyle(document.documentElement)
+                    .getPropertyValue(COLORS[i]).trim();
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="dot dot-${i}"></div>
+        <div>
+          <div class="drink-name">${b.name || PUMPE[i]}</div>
+          <div style="font-size:.8rem;color:#64748b">${PUMPE[i]}</div>
+        </div>
+        <div class="pct-badge ${pctClass(p)}">${p}%</div>
+      </div>
+
+      <div class="bar-track">
+        <div class="bar-fill ${fillClass(p)}" style="width:${p}%"></div>
+      </div>
+
+      <div class="detail-row">
+        <span>Verbraucht: <strong>${b.dispensedMl} ml</strong></span>
+        <span>Verbleibend: <strong>${remainMl} ml</strong></span>
+        <span>Gesamt: <strong>${b.sizeMl} ml</strong></span>
+      </div>
+
+      <div class="size-row">
+        <label>Flaschengröße:</label>
+        <select id="size-${i}" onchange="markDirty(${i})">
+          ${SIZES.map(s => `<option value="${s}"${s===b.sizeMl?' selected':''}>${s} ml</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-save" id="save-${i}" onclick="saveSize(${i})" disabled>
+          Speichern
+        </button>
+        <button class="btn-reset" onclick="resetBottle(${i}, '${b.name || PUMPE[i]}')">
+          Zähler zurücksetzen
+        </button>
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+
+  // Kalibrierung anzeigen
+  if(data.msPerCl) {
+    document.getElementById('cal-val').textContent = data.msPerCl + ' ms/cl';
+    document.getElementById('cal-card').style.display = 'flex';
+  }
+}
+
+function markDirty(i) {
+  document.getElementById('save-' + i).disabled = false;
+}
+
+async function saveSize(i) {
+  const sizes = [0,1,2].map(j => {
+    const el = document.getElementById('size-' + j);
+    return el ? parseInt(el.value) : currentData.bottles[j].sizeMl;
+  });
+  const btn = document.getElementById('save-' + i);
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/bottles', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({sizes})
+    });
+    if(r.ok) { toast('Flaschengröße gespeichert!'); await loadData(); }
+    else      { toast('Fehler beim Speichern', true); btn.disabled = false; }
+  } catch(e) { toast('Verbindungsfehler', true); btn.disabled = false; }
+}
+
+async function resetBottle(i, name) {
+  if(!confirm(`Zähler für "${name}" wirklich zurücksetzen?\nDies setzt den Verbrauch auf 0 ml zurück.`)) return;
+  try {
+    const r = await fetch('/api/resetBottle?drink=' + i);
+    if(r.ok) { toast('Zähler zurückgesetzt!'); await loadData(); }
+    else      { toast('Fehler', true); }
+  } catch(e) { toast('Verbindungsfehler', true); }
+}
+
+async function loadData() {
+  try {
+    const r = await fetch('/api/bottles');
+    if(!r.ok) throw new Error();
+    const data = await r.json();
+    buildCards(data);
+  } catch(e) {
+    document.getElementById('cards').innerHTML =
+      '<div class="card" style="color:#f87171">Fehler beim Laden der Daten.</div>';
+  }
+}
+
+// Beim Start laden, danach alle 30s aktualisieren
+loadData();
+setInterval(loadData, 30000);
+</script>
+</body>
+</html>

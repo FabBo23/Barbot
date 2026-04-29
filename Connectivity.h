@@ -792,6 +792,58 @@ class Connectivity {
         } else request->send(400, "text/plain", "Bad Args");
       });
 
+      // --- Flaschen-Füllstand (GET: lesen, POST: Flaschengrößen speichern) ---
+      server.on("/api/bottles", HTTP_GET, [this](AsyncWebServerRequest *request){
+          StaticJsonDocument<384> doc;
+          JsonArray arr = doc.createNestedArray("bottles");
+          if(xSemaphoreTake(botMutex, pdMS_TO_TICKS(50))) {
+              for(int i = 0; i < 3; i++) {
+                  JsonObject b = arr.createNestedObject();
+                  b["name"]        = cache.drinkNames[i];
+                  b["sizeMl"]      = bot->bottleSizeMl[i];
+                  b["dispensedMl"] = bot->dispensedMl[i];
+              }
+              doc["msPerCl"] = bot->msPerCl;
+              xSemaphoreGive(botMutex);
+          }
+          String res; serializeJson(doc, res);
+          request->send(200, "application/json", res);
+      });
+
+      server.on("/api/bottles", HTTP_POST, [](AsyncWebServerRequest *request){
+          request->send(200, "text/plain", "OK");
+      }, NULL, [this](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t, size_t){
+          StaticJsonDocument<128> doc;
+          if(deserializeJson(doc, (const char*)data, len)) return;
+          if(!doc.containsKey("sizes")) return;
+          if(xSemaphoreTake(botMutex, pdMS_TO_TICKS(100))) {
+              JsonArray sizes = doc["sizes"].as<JsonArray>();
+              for(int i = 0; i < 3 && i < (int)sizes.size(); i++)
+                  bot->saveBottleSize(i, sizes[i].as<int>());
+              xSemaphoreGive(botMutex);
+          }
+      });
+
+      server.on("/api/resetBottle", HTTP_GET, [this](AsyncWebServerRequest *request){
+          if(request->hasParam("drink")) {
+              int idx = request->getParam("drink")->value().toInt();
+              if(xSemaphoreTake(botMutex, pdMS_TO_TICKS(100))) {
+                  bot->resetBottle(idx);
+                  xSemaphoreGive(botMutex);
+              }
+              request->send(200, "text/plain", "OK");
+          } else {
+              request->send(400, "text/plain", "Kein Drink-Index");
+          }
+      });
+
+      server.on("/bottles", HTTP_GET, [](AsyncWebServerRequest *request){
+          if(LittleFS.exists("/bottles.html"))
+              request->send(LittleFS, "/bottles.html", "text/html");
+          else
+              request->redirect("/");
+      });
+
       server.on("/api/setAll", HTTP_GET, [this](AsyncWebServerRequest *request){
         if(request->hasParam("val")) {
             int val = request->getParam("val")->value().toInt();
