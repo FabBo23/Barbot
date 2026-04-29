@@ -163,7 +163,8 @@
           <label>Port</label><input type="number" id="mp">
           <label>User</label><input type="text" id="mu">
           <label>Passwort</label>
-          <input type="password" id="mwd" placeholder="Passwort eingeben">
+          <input type="password" id="mwd" placeholder="Leer lassen um nicht zu ändern">
+          <div class="hint" id="pass_hint" style="display:none;">&#9989; Passwort ist gespeichert. Feld leer lassen, um es nicht zu überschreiben.</div>
           
           <!-- NEU: Explizite SSL/TLS Auswahl -->
           <div class="checkbox-row" style="margin-top:15px; background:none; padding:0;">
@@ -197,18 +198,16 @@
     </div>
 
     <div class="card">
-      <h3>&#9878; Kalibrierung & Flaschen</h3>
+      <h3>&#9878; Kalibrierung</h3>
 
       <label>Millisekunden pro Centiliter (ms/cl)</label>
-      <input type="number" id="msPerCl" min="500" max="10000" step="100" value="2000">
+      <input type="number" id="msPerCl" min="500" max="10000" step="100">
       <div class="hint">Standard: 2000 ms = 1 cl. Zum Kalibrieren: Pumpe X Sekunden laufen lassen, Menge messen, dann <strong>ms/cl = Laufzeit&nbsp;ms &divide; gemessene&nbsp;cl</strong> eintragen. Beispiel: 4000ms → 2cl gemessen → 2000&nbsp;ms/cl.</div>
       <button class="btn-save" onclick="saveCalibration()" style="background:#0284c7;">&#9655; Kalibrierung speichern</button>
 
-      <hr>
-
-      <div style="margin-bottom:8px; font-weight:600; color:var(--acc);">Flaschen-Mengenzähler</div>
-      <div id="bottle_container">
-        <div style="color:var(--txt-dim); text-align:center; padding:20px;">Lade...</div>
+      <div class="hint" style="margin-top:18px;">
+        Flaschengrößen, Verbrauch und Reset findest du auf der Seite
+        <a href="/bottles" style="color:var(--acc);font-weight:600;">&#127868; Flaschen</a>.
       </div>
     </div>
 
@@ -244,14 +243,18 @@
       document.getElementById('d3').value = d.drinks[2];
       if(typeof d.cydMode  !== 'undefined') document.getElementById('cyd_mode').checked  = d.cydMode;
       if(typeof d.wifiSync !== 'undefined') document.getElementById('wifi_sync').checked = d.wifiSync;
-      if(typeof d.pourTime !== 'undefined') document.getElementById('pour_time_cl').value = (d.pourTime / (d.msPerCl||2000)).toFixed(1);
-      
+      if(typeof d.msPerCl  !== 'undefined') document.getElementById('msPerCl').value     = d.msPerCl;
+      if(typeof d.pourTime !== 'undefined' && d.msPerCl) {
+        document.getElementById('pour_time_cl').value = (d.pourTime / d.msPerCl).toFixed(1);
+      }
+
       if(d.mqtt) {
           document.getElementById('men').checked = d.mqtt.enabled;
           document.getElementById('ms').value    = d.mqtt.server;
           document.getElementById('mp').value    = d.mqtt.port;
           document.getElementById('mu').value    = d.mqtt.user;
-          document.getElementById('mtls').checked = d.mqtt.tls || false; // NEU
+          document.getElementById('mtls').checked = d.mqtt.tls || false;
+          if(d.mqtt.pass_set) document.getElementById('pass_hint').style.display = 'block';
           toggleMqtt(d.mqtt.enabled);
       }
   });
@@ -320,72 +323,6 @@
     fetch('/api/saveConfig', { method:'POST', body:JSON.stringify({msPerCl: ms}) })
       .then(r => { if(r.ok) alert('Kalibrierung gespeichert! (' + ms + ' ms/cl = ' + (ms/1000).toFixed(2) + ' s/cl)'); });
   }
-
-  // ── Flaschen-Mengenzähler ─────────────────────────────────────────────────
-  function renderBottles(data) {
-    const drinks  = data.drinks  || ['Getränk 1', 'Getränk 2', 'Getränk 3'];
-    const bottles = data.bottles || [{sizeMl:700,dispensedMl:0},{sizeMl:700,dispensedMl:0},{sizeMl:700,dispensedMl:0}];
-    const colors  = ['#0044FF','#FF2200','#998800'];
-    const sizes   = [250, 330, 500, 700, 1000, 1500];
-
-    let html = '';
-    for(let i=0; i<3; i++) {
-      const b           = bottles[i] || {sizeMl:700, dispensedMl:0};
-      const dispensedCl = (b.dispensedMl / 10).toFixed(1);
-      const sizeCl      = (b.sizeMl / 10).toFixed(0);
-      const pct         = Math.min(100, Math.round(b.dispensedMl / b.sizeMl * 100));
-      const remaining   = Math.max(0, (b.sizeMl - b.dispensedMl) / 10).toFixed(1);
-      const barColor    = pct >= 80 ? '#ef4444' : pct >= 60 ? '#f97316' : '#38bdf8';
-      const warn        = pct >= 80 ? ' ⚠' : '';
-      const sizeOptions = sizes.map(ml =>
-        `<option value="${ml}"${b.sizeMl===ml?' selected':''}>${ml} ml</option>`
-      ).join('');
-
-      html += `<div style="background:rgba(0,0,0,0.15);border-radius:10px;padding:14px;margin-bottom:10px;border-left:4px solid ${colors[i]}${pct>=80?';border:1px solid #ef4444':''};box-sizing:border-box;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
-          <strong style="color:${colors[i]};">Pumpe ${i+1} – ${drinks[i]}${warn}</strong>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <label style="margin:0;color:var(--txt-dim);font-size:0.85rem;">Flasche:</label>
-            <select id="btl_size_${i}" onchange="saveBottleSize(${i})" style="background:#0b1120;color:#fff;border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:0.85rem;cursor:pointer;">${sizeOptions}</select>
-          </div>
-        </div>
-        <div style="background:#0b1120;border-radius:6px;height:12px;overflow:hidden;margin-bottom:5px;border:1px solid var(--border);">
-          <div style="height:100%;width:${pct}%;background:${barColor};transition:width 0.4s;"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.82rem;">
-          <span style="color:var(--txt-dim);">Ausgegossen: <b style="color:#fff;">${dispensedCl} cl</b> / ${sizeCl} cl &nbsp;|&nbsp; Rest: <b style="color:${pct>=80?'#ef4444':'#fff'};">${remaining} cl (${pct}%)</b></span>
-          <button onclick="resetBottle(${i})" style="background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid #ef4444;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:0.78rem;width:auto;margin:0;transition:background 0.2s;"
-            onmouseover="this.style.background='rgba(239,68,68,0.25)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">↺ Reset</button>
-        </div>
-      </div>`;
-    }
-    document.getElementById('bottle_container').innerHTML = html;
-
-    // Kalibrierung anzeigen
-    if(data.msPerCl) document.getElementById('msPerCl').value = data.msPerCl;
-    // cl-Menge anzeigen
-    if(data.pourTime && data.msPerCl) document.getElementById('pour_time_cl').value = (data.pourTime/data.msPerCl).toFixed(1);
-  }
-
-  function saveBottleSize(idx) {
-    const ml = parseInt(document.getElementById('btl_size_' + idx).value);
-    let p = {}; p['bottle_size_' + idx] = ml;
-    fetch('/api/saveConfig', {method:'POST', body:JSON.stringify(p)}).then(()=>{});
-  }
-
-  function resetBottle(idx) {
-    if(!confirm('Mengenzähler für Pumpe ' + (idx+1) + ' zurücksetzen?')) return;
-    fetch('/api/resetBottle?drink=' + idx).then(r => {
-      if(r.ok) { alert('Zurückgesetzt!'); loadBottleData(); }
-    });
-  }
-
-  function loadBottleData() {
-    fetch('/api/config').then(r => r.json()).then(d => renderBottles(d)).catch(()=>{});
-  }
-  loadBottleData();
-  setInterval(loadBottleData, 30000);
-
 </script>
 </body>
 </html>

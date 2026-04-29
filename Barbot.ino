@@ -730,7 +730,9 @@ void loop() {
       delay(ANTIDRIP_TIME_MS);
       bot.stopPump(drinkForThisSlot);
 
-      bot.addDispensed(drinkForThisSlot, bot.pourTimeMs / bot.msPerCl * 10);
+      // Wichtig: erst multiplizieren, dann teilen – sonst geht durch
+      // Integer-Division Genauigkeit verloren (z.B. 4000/2800 = 1 statt 1.43)
+      bot.addDispensed(drinkForThisSlot, (bot.pourTimeMs * 10) / bot.msPerCl);
       filledSlots[i] = true;
       // Warnung erst NACH Abschluss der ganzen Sequenz prüfen,
       // damit Fortschrittsseite (p2) nicht überschrieben wird

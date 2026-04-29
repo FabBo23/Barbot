@@ -650,15 +650,17 @@ class Connectivity {
              doc["cydMode"]   = bot ? bot->cydMode : false;
              doc["wifiSync"]  = bot ? bot->wifiSyncEnabled : true;
              doc["pourTime"]  = bot ? bot->pourTimeMs : 5000;
+             doc["msPerCl"]   = bot ? bot->msPerCl    : 2000;
              doc["displayIP"] = bot ? bot->displayIP : "";
              xSemaphoreGive(botMutex);
          }
          JsonObject mqtt = doc.createNestedObject("mqtt");
-         mqtt["enabled"] = this->mqttEnabled;
-         mqtt["server"]  = this->mqttServer;
-         mqtt["port"]    = this->mqttPort;
-         mqtt["user"]    = this->mqttUser;
-         mqtt["tls"]     = this->mqttTls;
+         mqtt["enabled"]    = this->mqttEnabled;
+         mqtt["server"]     = this->mqttServer;
+         mqtt["port"]       = this->mqttPort;
+         mqtt["user"]       = this->mqttUser;
+         mqtt["tls"]        = this->mqttTls;
+         mqtt["pass_set"]   = (this->mqttPass.length() > 0);  // Indikator ob ein Passwort gespeichert ist
          String res; serializeJson(doc, res);
          request->send(200, "application/json", res);
       });
@@ -685,14 +687,21 @@ class Connectivity {
               prefs.putBool("wifiSync", bot->wifiSyncEnabled);
               prefs.end();
             }
+            // Kalibrierung MUSS vor pourTimeCl kommen, weil cl→ms davon abhängt
+            if(doc.containsKey("msPerCl")) {
+              bot->saveCalibration(doc["msPerCl"].as<int>());
+            }
             if(doc.containsKey("pourTime")) {
               bot->savePourTime(doc["pourTime"].as<int>());
+            }
+            if(doc.containsKey("pourTimeCl")) {
+              bot->savePourVolumeCl(doc["pourTimeCl"].as<float>());
             }
             xSemaphoreGive(botMutex);
           }
           
           if(doc.containsKey("mqtt_server")) {
-               prefs.begin("barbot_cfg", false);  
+               prefs.begin("barbot_cfg", false);
                if(doc.containsKey("mqtt_enabled")) {
                  this->mqttEnabled = doc["mqtt_enabled"].as<bool>();
                  prefs.putBool("mq_en", this->mqttEnabled);
@@ -701,7 +710,16 @@ class Connectivity {
                prefs.putString("mq_srv", this->mqttServer);
                if(doc.containsKey("mqtt_port")) { this->mqttPort = doc["mqtt_port"].as<int>(); prefs.putInt("mq_prt", this->mqttPort); }
                if(doc.containsKey("mqtt_user")) { this->mqttUser = doc["mqtt_user"].as<String>(); prefs.putString("mq_usr", this->mqttUser); }
-               if(doc.containsKey("mqtt_pass")) { this->mqttPass = doc["mqtt_pass"].as<String>(); prefs.putString("mq_pwd", this->mqttPass); }
+               // Passwort nur überschreiben wenn ein neues angegeben wurde –
+               // das Eingabefeld ist beim Reload immer leer (Sicherheit), also
+               // würde sonst jedes "Speichern" das gespeicherte Passwort löschen.
+               if(doc.containsKey("mqtt_pass")) {
+                 String newPass = doc["mqtt_pass"].as<String>();
+                 if(newPass.length() > 0) {
+                   this->mqttPass = newPass;
+                   prefs.putString("mq_pwd", this->mqttPass);
+                 }
+               }
                if(doc.containsKey("mqtt_tls"))  { this->mqttTls  = doc["mqtt_tls"].as<bool>(); prefs.putBool("mq_tls", this->mqttTls); }
                prefs.end();
                
