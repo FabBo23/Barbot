@@ -456,20 +456,34 @@ void checkCommands() {
     // Nicht-Touch-Meldungen (Logs, Fehler) dürfen den Inaktivitäts-Timer
     // NICHT zurücksetzen – sonst startet der Screensaver nie.
 
-    // openHASP sendet beim Verbinden: "HASP online 192.168.x.x"
-    // → IP merken und Display-Inhalte neu aufbauen
-    int ipIdx = line.indexOf("HASP online ");
-    if (ipIdx >= 0) {
-      String displayIP = line.substring(ipIdx + 12);
-      displayIP.trim();
-      if (displayIP.length() > 6) {
-        bot.displayIP = displayIP;
-        Serial.println("[CYD] Display-IP erkannt: " + displayIP);
-        bot.sendHasp("p3b6.text=\"Disp: " + displayIP + "\""); // <-- NEU: Live-Anzeige der Display-IP
-        // Persistieren: beim naechsten Start (auch im AP-Modus) sofort verfuegbar
-        Preferences p; p.begin("barbot", false); p.putString("dispIP", displayIP); p.end();
+    // openHASP sendet die eigene IP in zwei möglichen Formaten:
+    //   Alt: "HASP online 192.168.x.x"
+    //   Neu: "...WIFI: Received IP address 192.168.x.x"
+    // Aus dem rohen Substring nur Ziffern und Punkte übernehmen,
+    // damit ANSI-Escape-Sequenzen (\x1B[...) den String nicht verunreinigen.
+    {
+      String rawAfter = "";
+      int idx = line.indexOf("HASP online ");
+      if (idx >= 0)       rawAfter = line.substring(idx + 12);
+      else {
+        idx = line.indexOf("IP address ");
+        if (idx >= 0)     rawAfter = line.substring(idx + 11);
       }
-      updateDisplay();
+      if (rawAfter.length() > 0) {
+        String displayIP = "";
+        for (int i = 0; i < rawAfter.length(); i++) {
+          char c = rawAfter.charAt(i);
+          if (isDigit(c) || c == '.') displayIP += c;
+          else if (displayIP.length() > 0) break;  // erstes Nicht-IP-Zeichen nach dem Start → Ende
+        }
+        if (displayIP.length() >= 7) {  // Mindestlänge "1.2.3.4"
+          bot.displayIP = displayIP;
+          Serial.println("[CYD] Display-IP erkannt: " + displayIP);
+          bot.sendHasp("p3b6.text=\"Disp: " + displayIP + "\"");
+          Preferences p; p.begin("barbot", false); p.putString("dispIP", displayIP); p.end();
+          updateDisplay();
+        }
+      }
     }
   }
 
