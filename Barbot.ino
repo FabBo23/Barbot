@@ -337,11 +337,11 @@ void handleCommand(BotCommand cmd) {
       bot.updatePourTimeDisplay();
       break;
     case CMD_POUR_PLUS:
-      bot.savePourTime(bot.pourTimeMs + 500);
+      bot.savePourVolumeCl(bot.getPourVolumeCl() + 0.5f);
       bot.updatePourTimeDisplay();
       break;
     case CMD_POUR_MINUS:
-      bot.savePourTime(bot.pourTimeMs - 500);
+      bot.savePourVolumeCl(bot.getPourVolumeCl() - 0.5f);
       bot.updatePourTimeDisplay();
       break;
 

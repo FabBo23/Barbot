@@ -862,6 +862,13 @@ class Connectivity {
               request->redirect("/");
       });
 
+      server.on("/levels", HTTP_GET, [](AsyncWebServerRequest *request){
+          if(LittleFS.exists("/levels.html"))
+              request->send(LittleFS, "/levels.html", "text/html");
+          else
+              request->redirect("/");
+      });
+
       server.on("/api/setAll", HTTP_GET, [this](AsyncWebServerRequest *request){
         if(request->hasParam("val")) {
             int val = request->getParam("val")->value().toInt();
