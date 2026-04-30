@@ -52,7 +52,9 @@ class Connectivity {
         bool isBusy;
         int activeSlot;
         int activeDrink;
-        char drinkNames[3][33]; 
+        char drinkNames[3][33];
+        int dispensedMl[3];
+        int bottleSizeMl[3];
     } cache;
 
     StateCache lastSentCache;
@@ -79,6 +81,8 @@ class Connectivity {
         int activeSlot;
         int activeDrink;
         char drinkNames[3][33];
+        int dispensedMl[3];
+        int bottleSizeMl[3];
         bool initialized;
     } mqttSent;
 
@@ -132,6 +136,7 @@ class Connectivity {
       mqttSent.activeSlot = -99;
       mqttSent.activeDrink = -99;
       for(int i=0;i<12;i++) mqttSent.slots[i] = -99;
+      for(int i=0;i<3;i++)  { mqttSent.dispensedMl[i] = -1; mqttSent.bottleSizeMl[i] = -1; }
       memset(mqttSent.drinkNames, 0, sizeof(mqttSent.drinkNames));
     }
 
@@ -330,6 +335,10 @@ class Connectivity {
               strncpy(cache.drinkNames[0], bot->drinkNames[0].c_str(), 32); cache.drinkNames[0][32] = 0;
               strncpy(cache.drinkNames[1], bot->drinkNames[1].c_str(), 32); cache.drinkNames[1][32] = 0;
               strncpy(cache.drinkNames[2], bot->drinkNames[2].c_str(), 32); cache.drinkNames[2][32] = 0;
+              for(int i=0; i<3; i++) {
+                  cache.dispensedMl[i]   = bot->dispensedMl[i];
+                  cache.bottleSizeMl[i]  = bot->bottleSizeMl[i];
+              }
               xSemaphoreGive(botMutex);
           }
       }
@@ -862,6 +871,13 @@ class Connectivity {
               request->redirect("/");
       });
 
+      server.on("/levels", HTTP_GET, [](AsyncWebServerRequest *request){
+          if(LittleFS.exists("/levels.html"))
+              request->send(LittleFS, "/levels.html", "text/html");
+          else
+              request->redirect("/");
+      });
+
       server.on("/api/setAll", HTTP_GET, [this](AsyncWebServerRequest *request){
         if(request->hasParam("val")) {
             int val = request->getParam("val")->value().toInt();
@@ -1137,6 +1153,22 @@ class Connectivity {
                 String imgUrl = "http://" + WiFi.localIP().toString() + "/drink_" + String(i) + ".jpg";
                 snprintf(topic, 32, "barbot/drink/%d/image", i);
                 client.publish(topic, imgUrl.c_str(), true);
+            }
+        }
+
+        for(int i = 0; i < 3; i++) {
+            char topic[36]; char val[12];
+            if(forceAll || cache.dispensedMl[i] != mqttSent.dispensedMl[i]) {
+                mqttSent.dispensedMl[i] = cache.dispensedMl[i];
+                snprintf(topic, 36, "barbot/bottle/%d/dispensedMl", i);
+                itoa(cache.dispensedMl[i], val, 10);
+                client.publish(topic, val, true);
+            }
+            if(forceAll || cache.bottleSizeMl[i] != mqttSent.bottleSizeMl[i]) {
+                mqttSent.bottleSizeMl[i] = cache.bottleSizeMl[i];
+                snprintf(topic, 36, "barbot/bottle/%d/sizeMl", i);
+                itoa(cache.bottleSizeMl[i], val, 10);
+                client.publish(topic, val, true);
             }
         }
     }

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Füllstand-Anzeige – BarBot</title>
+<style>
+  :root{--bg:#0f172a;--card:#1e293b;--acc:#38bdf8;--txt:#f8fafc;--border:#334155;
+        --ok:#10b981;--warn:#f59e0b;--err:#ef4444;
+        --c0:#60a5fa;--c1:#f87171;--c2:#facc15}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--txt);
+       padding:20px;min-height:100vh}
+  .container{max-width:560px;margin:0 auto;padding-bottom:40px}
+  nav{display:flex;flex-wrap:wrap;gap:8px;background:rgba(0,0,0,.2);
+      padding:12px 16px;border-radius:12px;margin-bottom:24px}
+  nav a{color:var(--acc);text-decoration:none;font-weight:600;
+        padding:7px 12px;border-radius:6px;background:rgba(56,189,248,.1);
+        font-size:.9rem;white-space:nowrap}
+  nav a:hover{background:rgba(56,189,248,.2)}
+  h1{text-align:center;margin-bottom:6px}
+  .subtitle{text-align:center;color:#94a3b8;font-size:.875rem;margin-bottom:24px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+        padding:22px;margin-bottom:18px}
+  .card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+  .dot-0{background:var(--c0)} .dot-1{background:var(--c1)} .dot-2{background:var(--c2)}
+  .drink-name{font-size:1.1rem;font-weight:700}
+  .pct-badge{margin-left:auto;font-size:1.5rem;font-weight:800}
+  .pct-ok  {color:var(--ok)}
+  .pct-warn{color:var(--warn)}
+  .pct-err {color:var(--err)}
+
+  .bar-track{width:100%;height:22px;background:#0b1120;border-radius:11px;
+             overflow:hidden;border:1px solid var(--border);margin-bottom:14px}
+  .bar-fill{height:100%;border-radius:11px;transition:width .6s ease}
+  .fill-ok  {background:linear-gradient(90deg,#059669,#10b981)}
+  .fill-warn{background:linear-gradient(90deg,#b45309,#f59e0b)}
+  .fill-err {background:linear-gradient(90deg,#b91c1c,#ef4444)}
+
+  .detail-row{display:flex;justify-content:space-between;align-items:center;
+              flex-wrap:wrap;gap:8px}
+  .detail-row span{font-size:.875rem;color:#94a3b8}
+  .detail-row strong{color:var(--txt)}
+</style>
+</head>
+<body>
+<div class="container">
+  <nav>
+    <a href="/">&larr; BarBot</a>
+    <a href="/bottles">&#127868; Flaschen</a>
+    <a href="/settings">&#9881; Settings</a>
+  </nav>
+
+  <h1>&#128202; Füllstand-Anzeige</h1>
+  <p class="subtitle">Aktueller Füllstand der Flaschen (nur Anzeige)</p>
+
+  <div id="cards">
+    <div class="card" style="text-align:center;color:#94a3b8">Lade Daten...</div>
+  </div>
+</div>
+
+<script>
+const COLORS = ['--c0','--c1','--c2'];
+const PUMPE  = ['Pumpe 1','Pumpe 2','Pumpe 3'];
+
+function pct(b) {
+  if(!b.sizeMl || b.sizeMl === 0) return 0;
+  const used = Math.min(100, Math.round(b.dispensedMl * 100 / b.sizeMl));
+  return Math.max(0, 100 - used);
+}
+function fillClass(remPct) {
+  return remPct <= 20 ? 'fill-err' : remPct <= 40 ? 'fill-warn' : 'fill-ok';
+}
+function pctClass(remPct) {
+  return remPct <= 20 ? 'pct-err' : remPct <= 40 ? 'pct-warn' : 'pct-ok';
+}
+function remaining(b) {
+  return Math.max(0, b.sizeMl - b.dispensedMl);
+}
+
+function buildCards(data) {
+  const wrap = document.getElementById('cards');
+  wrap.innerHTML = '';
+
+  data.bottles.forEach((b, i) => {
+    const remPct = pct(b);
+    const remainMl = remaining(b);
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="dot dot-${i}"></div>
+        <div>
+          <div class="drink-name">${b.name || PUMPE[i]}</div>
+          <div style="font-size:.8rem;color:#64748b">${PUMPE[i]}</div>
+        </div>
+        <div class="pct-badge ${pctClass(remPct)}">${remPct}%</div>
+      </div>
+
+      <div class="bar-track">
+        <div class="bar-fill ${fillClass(remPct)}" style="width:${remPct}%"></div>
+      </div>
+
+      <div class="detail-row">
+        <span>Verbleibend: <strong>${remainMl} ml</strong></span>
+        <span>Gesamt: <strong>${b.sizeMl} ml</strong></span>
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+async function loadData() {
+  try {
+    const r = await fetch('/api/bottles');
+    if(!r.ok) throw new Error();
+    const data = await r.json();
+    buildCards(data);
+  } catch(e) {
+    document.getElementById('cards').innerHTML =
+      '<div class="card" style="color:#f87171">Fehler beim Laden der Daten.</div>';
+  }
+}
+
+loadData();
+setInterval(loadData, 15000);
+</script>
+</body>
+</html>
