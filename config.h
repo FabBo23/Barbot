@@ -11,7 +11,7 @@
 #include <Arduino.h>
 
 // Versions-String – muss mit dem Git-Tag beim Release übereinstimmen (z.B. "v1.2.3")
-#define FIRMWARE_VERSION "v1.3.0"
+#define FIRMWARE_VERSION "v1.3.1"
 
 // =============================================================================
 // PUMPEN-PINS (H-Brücken-Steuerung, je 2 Pins pro Motor: Vorwärts / Rückwärts)
