@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BarBot – Füllstand</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; overscroll-behavior-y: contain; }
+        .bar-track { background: #0b1120; border-radius: 9999px; overflow: hidden; }
+        .bar-fill { height: 100%; border-radius: 9999px; transition: width 0.6s ease; }
+        .bar-ok   { background: linear-gradient(90deg, #059669, #10b981); }
+        .bar-warn { background: linear-gradient(90deg, #b45309, #f59e0b); }
+        .bar-err  { background: linear-gradient(90deg, #b91c1c, #ef4444); }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen p-4">
+
+    <!-- ZUGRIFF VERWEIGERT -->
+    <div id="screen-denied" class="hidden h-full flex flex-col justify-center items-center px-4 space-y-6 pt-20">
+        <div class="bg-red-900/30 border border-red-500/50 p-8 rounded-xl max-w-sm text-center">
+            <h2 class="text-2xl font-bold mb-2 text-red-400">Zugriff verweigert</h2>
+            <p class="text-slate-300 text-sm">Bitte scanne den originalen QR-Code auf dem BarBot-Display.</p>
+        </div>
+    </div>
+
+    <!-- APP -->
+    <div id="app-container" class="flex flex-col h-full hidden">
+        <header class="text-center py-4 mb-4 border-b border-slate-700 relative">
+            <a href="index.html" class="absolute left-0 top-1/2 -translate-y-1/2 text-sky-400 text-sm px-2 py-1 rounded hover:text-sky-300">← Zurück</a>
+            <h1 class="text-2xl font-bold text-sky-400">Füllstand</h1>
+            <div class="mt-1">
+                <div id="status-dot" class="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                <span id="status-text" class="text-sm text-slate-400">Getrennt</span>
+            </div>
+        </header>
+
+        <main class="flex-1 max-w-md mx-auto w-full space-y-4 pb-8">
+            <p class="text-center text-slate-400 text-sm mb-4">Aktueller Füllstand der Flaschen</p>
+
+            <!-- Bottle Card 0 -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full bg-sky-400 flex-shrink-0"></div>
+                        <div>
+                            <div class="font-semibold text-base" id="name-0">Pumpe 1</div>
+                            <div class="text-xs text-slate-500">Pumpe 1</div>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold" id="pct-0">–</div>
+                </div>
+                <div class="bar-track h-4 mb-3 border border-slate-600">
+                    <div class="bar-fill bar-ok" id="bar-0" style="width:0%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-slate-400">
+                    <span>Verbleibend: <span class="text-slate-200 font-medium" id="remain-0">–</span> ml</span>
+                    <span>Gesamt: <span class="text-slate-200 font-medium" id="size-0">–</span> ml</span>
+                </div>
+            </div>
+
+            <!-- Bottle Card 1 -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full bg-rose-400 flex-shrink-0"></div>
+                        <div>
+                            <div class="font-semibold text-base" id="name-1">Pumpe 2</div>
+                            <div class="text-xs text-slate-500">Pumpe 2</div>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold" id="pct-1">–</div>
+                </div>
+                <div class="bar-track h-4 mb-3 border border-slate-600">
+                    <div class="bar-fill bar-ok" id="bar-1" style="width:0%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-slate-400">
+                    <span>Verbleibend: <span class="text-slate-200 font-medium" id="remain-1">–</span> ml</span>
+                    <span>Gesamt: <span class="text-slate-200 font-medium" id="size-1">–</span> ml</span>
+                </div>
+            </div>
+
+            <!-- Bottle Card 2 -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full bg-amber-400 flex-shrink-0"></div>
+                        <div>
+                            <div class="font-semibold text-base" id="name-2">Pumpe 3</div>
+                            <div class="text-xs text-slate-500">Pumpe 3</div>
+                        </div>
+                    </div>
+                    <div class="text-2xl font-bold" id="pct-2">–</div>
+                </div>
+                <div class="bar-track h-4 mb-3 border border-slate-600">
+                    <div class="bar-fill bar-ok" id="bar-2" style="width:0%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-slate-400">
+                    <span>Verbleibend: <span class="text-slate-200 font-medium" id="remain-2">–</span> ml</span>
+                    <span>Gesamt: <span class="text-slate-200 font-medium" id="size-2">–</span> ml</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ==============================================================================
+        // EINSTELLUNGEN (müssen mit index.html übereinstimmen)
+        // ==============================================================================
+        const SECRET_CODE = "party123";
+        const MQTT_BROKER = 'wss://3eb07fcfa5af4fc6b090299bd78da073.s1.eu.hivemq.cloud:8884/mqtt';
+        const MQTT_USER   = 'Barbot';
+        const MQTT_PASS   = 'MQTTBarbot123';
+        // ==============================================================================
+
+        const PUMPE = ['Pumpe 1', 'Pumpe 2', 'Pumpe 3'];
+
+        // Bottle state
+        const bottles = [
+            { dispensedMl: 0, sizeMl: 0 },
+            { dispensedMl: 0, sizeMl: 0 },
+            { dispensedMl: 0, sizeMl: 0 }
+        ];
+
+        function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userCode = urlParams.get('code');
+
+            if (userCode !== SECRET_CODE) {
+                document.getElementById('screen-denied').classList.remove('hidden');
+                document.getElementById('app-container').classList.add('hidden');
+                return;
+            }
+
+            document.getElementById('screen-denied').classList.add('hidden');
+            document.getElementById('app-container').classList.remove('hidden');
+            connectMQTT();
+        }
+
+        function connectMQTT() {
+            const statusDot  = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+            statusText.innerText = 'Verbinde...';
+            statusDot.className  = 'inline-block w-3 h-3 rounded-full bg-yellow-500 mr-2';
+
+            const clientId = 'phone_lvl_' + Math.random().toString(36).substr(2, 9);
+            const options = { clientId, clean: true };
+            if (MQTT_USER.trim()) options.username = MQTT_USER.trim();
+            if (MQTT_PASS.trim()) options.password = MQTT_PASS.trim();
+
+            const client = mqtt.connect(MQTT_BROKER, options);
+
+            client.on('connect', () => {
+                statusText.innerText = 'Online';
+                statusDot.className  = 'inline-block w-3 h-3 rounded-full bg-green-500 mr-2';
+
+                client.subscribe('barbot/drink/+/name');
+                client.subscribe('barbot/bottle/+/dispensedMl');
+                client.subscribe('barbot/bottle/+/sizeMl');
+            });
+
+            client.on('error', () => {
+                statusText.innerText = 'Zugriffsfehler';
+                statusDot.className  = 'inline-block w-3 h-3 rounded-full bg-red-500 mr-2';
+                client.end();
+            });
+
+            client.on('offline', () => {
+                statusText.innerText = 'Offline';
+                statusDot.className  = 'inline-block w-3 h-3 rounded-full bg-red-500 mr-2';
+            });
+
+            client.on('message', (topic, message) => {
+                const msg = message.toString();
+                const parts = topic.split('/');
+
+                if (topic.startsWith('barbot/drink/') && topic.endsWith('/name')) {
+                    const i = parseInt(parts[2]);
+                    if (i >= 0 && i < 3) {
+                        document.getElementById('name-' + i).innerText = msg;
+                    }
+                    return;
+                }
+
+                if (topic.startsWith('barbot/bottle/')) {
+                    const i = parseInt(parts[2]);
+                    if (i < 0 || i > 2) return;
+                    if (parts[3] === 'dispensedMl') bottles[i].dispensedMl = parseInt(msg);
+                    if (parts[3] === 'sizeMl')      bottles[i].sizeMl      = parseInt(msg);
+                    updateCard(i);
+                }
+            });
+        }
+
+        function updateCard(i) {
+            const b = bottles[i];
+            const sizeMl = b.sizeMl || 0;
+            const usedMl = Math.min(b.dispensedMl, sizeMl);
+            const remMl  = Math.max(0, sizeMl - usedMl);
+            const remPct = sizeMl > 0 ? Math.round(remMl * 100 / sizeMl) : 0;
+
+            let barClass = 'bar-fill';
+            let pctColor = 'text-emerald-400';
+            if (remPct <= 20)      { barClass += ' bar-err';  pctColor = 'text-red-400'; }
+            else if (remPct <= 40) { barClass += ' bar-warn'; pctColor = 'text-amber-400'; }
+            else                   { barClass += ' bar-ok'; }
+
+            const bar  = document.getElementById('bar-' + i);
+            const pct  = document.getElementById('pct-' + i);
+            const rem  = document.getElementById('remain-' + i);
+            const size = document.getElementById('size-' + i);
+
+            bar.style.width    = remPct + '%';
+            bar.className      = barClass;
+            pct.innerText      = remPct + '%';
+            pct.className      = 'text-2xl font-bold ' + pctColor;
+            rem.innerText      = remMl;
+            size.innerText     = sizeMl;
+        }
+
+        init();
+    </script>
+</body>
+</html>
