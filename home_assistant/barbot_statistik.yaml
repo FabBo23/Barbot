@@ -1,245 +1,500 @@
 # =============================================================================
-# BarBot – Getränke-Statistik pro Stellplatz
+# BarBot – Getränke-Statistik pro Stellplatz (pro Getränk aufgeschlüsselt)
 # =============================================================================
+# In configuration.yaml einbinden:
+#   counter:    !include home_assistant/barbot_statistik.yaml   # nur counter-Teil
+#   automation: !include home_assistant/barbot_statistik.yaml   # nur automation-Teil
 #
-# Was wird getrackt:
-#   Jedes Mal wenn BarBot fertig einschenkt (barbot/event = "DONE") wird für
-#   jeden belegten Stellplatz (Glas vorhanden) ein Zähler erhöht.
-#   Das Ergebnis ist sichtbar auf einer Lovelace-Karte.
+# ODER: counter: und automation: Abschnitte direkt in configuration.yaml kopieren.
 #
-# Einbinden in configuration.yaml:
-#   counter:    !include_dir_merge_named home_assistant/counter/
-#   script:     !include home_assistant/barbot_statistik.yaml  # nur script-Teil
-#
-# ODER: einfach jeden Abschnitt in die passende Sektion in configuration.yaml
-# kopieren (counter:, script:, automation:).
-#
-# ENTITY IDs prüfen:
-#   HA generiert Entity-IDs aus den Namen im MQTT-YAML. Prüfe die echten IDs
-#   unter Entwicklerwerkzeuge → Zustände und passe ggf. unten an.
-#   Erwartete IDs aus deiner bestehenden MQTT-Konfiguration:
-#     binary_sensor.barbot_glas_1  … barbot_glas_12
-#     select.barbot_slot_1_config  … barbot_slot_12_config
-#     text.barbot_getrank_1_blau
-#     text.barbot_getrank_2_rot
-#     text.barbot_getrank_3_gelb
+# Entity-IDs prüfen unter HA → Entwicklerwerkzeuge → Zustände.
 # =============================================================================
 
 
 # =============================================================================
-# 1) COUNTER-HELFER  (in configuration.yaml unter "counter:" eintragen)
+# 1) COUNTER-HELFER  – 36 Stück (12 Plätze × 3 Getränke)
 # =============================================================================
 counter:
-  barbot_platz_1:  { name: "Platz 1",  step: 1, initial: 0, icon: "mdi:cup" }
-  barbot_platz_2:  { name: "Platz 2",  step: 1, initial: 0, icon: "mdi:cup" }
-  barbot_platz_3:  { name: "Platz 3",  step: 1, initial: 0, icon: "mdi:cup" }
-  barbot_platz_4:  { name: "Platz 4",  step: 1, initial: 0, icon: "mdi:cup" }
-  barbot_platz_5:  { name: "Platz 5",  step: 1, initial: 0, icon: "mdi:cup" }
-  barbot_platz_6:  { name: "Platz 6",  step: 1, initial: 0, icon: "mdi:cup" }
-  barbot_platz_7:  { name: "Platz 7",  step: 1, initial: 0, icon: "mdi:cup" }
-  barbot_platz_8:  { name: "Platz 8",  step: 1, initial: 0, icon: "mdi:cup" }
-  barbot_platz_9:  { name: "Platz 9",  step: 1, initial: 0, icon: "mdi:cup" }
-  barbot_platz_10: { name: "Platz 10", step: 1, initial: 0, icon: "mdi:cup" }
-  barbot_platz_11: { name: "Platz 11", step: 1, initial: 0, icon: "mdi:cup" }
-  barbot_platz_12: { name: "Platz 12", step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_1_drink_0:  { name: "Platz 1 – Getränk 1",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_1_drink_1:  { name: "Platz 1 – Getränk 2",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_1_drink_2:  { name: "Platz 1 – Getränk 3",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_2_drink_0:  { name: "Platz 2 – Getränk 1",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_2_drink_1:  { name: "Platz 2 – Getränk 2",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_2_drink_2:  { name: "Platz 2 – Getränk 3",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_3_drink_0:  { name: "Platz 3 – Getränk 1",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_3_drink_1:  { name: "Platz 3 – Getränk 2",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_3_drink_2:  { name: "Platz 3 – Getränk 3",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_4_drink_0:  { name: "Platz 4 – Getränk 1",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_4_drink_1:  { name: "Platz 4 – Getränk 2",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_4_drink_2:  { name: "Platz 4 – Getränk 3",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_5_drink_0:  { name: "Platz 5 – Getränk 1",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_5_drink_1:  { name: "Platz 5 – Getränk 2",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_5_drink_2:  { name: "Platz 5 – Getränk 3",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_6_drink_0:  { name: "Platz 6 – Getränk 1",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_6_drink_1:  { name: "Platz 6 – Getränk 2",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_6_drink_2:  { name: "Platz 6 – Getränk 3",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_7_drink_0:  { name: "Platz 7 – Getränk 1",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_7_drink_1:  { name: "Platz 7 – Getränk 2",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_7_drink_2:  { name: "Platz 7 – Getränk 3",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_8_drink_0:  { name: "Platz 8 – Getränk 1",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_8_drink_1:  { name: "Platz 8 – Getränk 2",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_8_drink_2:  { name: "Platz 8 – Getränk 3",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_9_drink_0:  { name: "Platz 9 – Getränk 1",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_9_drink_1:  { name: "Platz 9 – Getränk 2",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_9_drink_2:  { name: "Platz 9 – Getränk 3",  step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_10_drink_0: { name: "Platz 10 – Getränk 1", step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_10_drink_1: { name: "Platz 10 – Getränk 2", step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_10_drink_2: { name: "Platz 10 – Getränk 3", step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_11_drink_0: { name: "Platz 11 – Getränk 1", step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_11_drink_1: { name: "Platz 11 – Getränk 2", step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_11_drink_2: { name: "Platz 11 – Getränk 3", step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_12_drink_0: { name: "Platz 12 – Getränk 1", step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_12_drink_1: { name: "Platz 12 – Getränk 2", step: 1, initial: 0, icon: "mdi:cup" }
+  barbot_platz_12_drink_2: { name: "Platz 12 – Getränk 3", step: 1, initial: 0, icon: "mdi:cup" }
 
 
 # =============================================================================
-# 2) AUTOMATION  (in configuration.yaml unter "automation:" oder in
-#                automations.yaml eintragen)
+# 2) AUTOMATION
 # =============================================================================
 automation:
   - id: "barbot_track_pours_on_done"
-    alias: "BarBot – Pours pro Platz zählen"
-    description: >
-      Erhöht den Zähler jedes Stellplatzes wenn dort beim letzten
-      Einschenkvorgang ein Glas stand.
+    alias: "BarBot – Pours pro Platz und Getränk zählen"
     trigger:
       - platform: mqtt
         topic: barbot/event
         payload: "DONE"
     action:
-      # Platz 1 (barbot/glass/0 → binary_sensor.barbot_glas_1)
-      - if:
-          - condition: state
-            entity_id: binary_sensor.barbot_3000_barbot_glas_1
-            state: "on"
-          - condition: not
-            conditions:
+      # --- Platz 1 ---
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_1
+                state: "on"
               - condition: state
                 entity_id: select.barbot_3000_barbot_slot_1_config
-                state: "-1"
-        then:
-          - service: counter.increment
-            target: { entity_id: counter.barbot_platz_1 }
-      # Platz 2
-      - if:
-          - condition: state
-            entity_id: binary_sensor.barbot_3000_barbot_glas_2
-            state: "on"
-          - condition: not
-            conditions:
+                state: "0"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_1_drink_0 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_1
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_1_config
+                state: "1"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_1_drink_1 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_1
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_1_config
+                state: "2"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_1_drink_2 }
+      # --- Platz 2 ---
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_2
+                state: "on"
               - condition: state
                 entity_id: select.barbot_3000_barbot_slot_2_config
-                state: "-1"
-        then:
-          - service: counter.increment
-            target: { entity_id: counter.barbot_platz_2 }
-      # Platz 3
-      - if:
-          - condition: state
-            entity_id: binary_sensor.barbot_3000_barbot_glas_3
-            state: "on"
-          - condition: not
-            conditions:
+                state: "0"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_2_drink_0 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_2
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_2_config
+                state: "1"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_2_drink_1 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_2
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_2_config
+                state: "2"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_2_drink_2 }
+      # --- Platz 3 ---
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_3
+                state: "on"
               - condition: state
                 entity_id: select.barbot_3000_barbot_slot_3_config
-                state: "-1"
-        then:
-          - service: counter.increment
-            target: { entity_id: counter.barbot_platz_3 }
-      # Platz 4
-      - if:
-          - condition: state
-            entity_id: binary_sensor.barbot_3000_barbot_glas_4
-            state: "on"
-          - condition: not
-            conditions:
+                state: "0"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_3_drink_0 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_3
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_3_config
+                state: "1"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_3_drink_1 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_3
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_3_config
+                state: "2"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_3_drink_2 }
+      # --- Platz 4 ---
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_4
+                state: "on"
               - condition: state
                 entity_id: select.barbot_3000_barbot_slot_4_config
-                state: "-1"
-        then:
-          - service: counter.increment
-            target: { entity_id: counter.barbot_platz_4 }
-      # Platz 5
-      - if:
-          - condition: state
-            entity_id: binary_sensor.barbot_3000_barbot_glas_5
-            state: "on"
-          - condition: not
-            conditions:
+                state: "0"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_4_drink_0 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_4
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_4_config
+                state: "1"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_4_drink_1 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_4
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_4_config
+                state: "2"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_4_drink_2 }
+      # --- Platz 5 ---
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_5
+                state: "on"
               - condition: state
                 entity_id: select.barbot_3000_barbot_slot_5_config
-                state: "-1"
-        then:
-          - service: counter.increment
-            target: { entity_id: counter.barbot_platz_5 }
-      # Platz 6
-      - if:
-          - condition: state
-            entity_id: binary_sensor.barbot_3000_barbot_glas_6
-            state: "on"
-          - condition: not
-            conditions:
+                state: "0"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_5_drink_0 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_5
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_5_config
+                state: "1"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_5_drink_1 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_5
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_5_config
+                state: "2"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_5_drink_2 }
+      # --- Platz 6 ---
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_6
+                state: "on"
               - condition: state
                 entity_id: select.barbot_3000_barbot_slot_6_config
-                state: "-1"
-        then:
-          - service: counter.increment
-            target: { entity_id: counter.barbot_platz_6 }
-      # Platz 7
-      - if:
-          - condition: state
-            entity_id: binary_sensor.barbot_3000_barbot_glas_7
-            state: "on"
-          - condition: not
-            conditions:
+                state: "0"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_6_drink_0 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_6
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_6_config
+                state: "1"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_6_drink_1 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_6
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_6_config
+                state: "2"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_6_drink_2 }
+      # --- Platz 7 ---
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_7
+                state: "on"
               - condition: state
                 entity_id: select.barbot_3000_barbot_slot_7_config
-                state: "-1"
-        then:
-          - service: counter.increment
-            target: { entity_id: counter.barbot_platz_7 }
-      # Platz 8
-      - if:
-          - condition: state
-            entity_id: binary_sensor.barbot_3000_barbot_glas_8
-            state: "on"
-          - condition: not
-            conditions:
+                state: "0"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_7_drink_0 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_7
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_7_config
+                state: "1"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_7_drink_1 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_7
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_7_config
+                state: "2"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_7_drink_2 }
+      # --- Platz 8 ---
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_8
+                state: "on"
               - condition: state
                 entity_id: select.barbot_3000_barbot_slot_8_config
-                state: "-1"
-        then:
-          - service: counter.increment
-            target: { entity_id: counter.barbot_platz_8 }
-      # Platz 9
-      - if:
-          - condition: state
-            entity_id: binary_sensor.barbot_3000_barbot_glas_9
-            state: "on"
-          - condition: not
-            conditions:
+                state: "0"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_8_drink_0 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_8
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_8_config
+                state: "1"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_8_drink_1 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_8
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_8_config
+                state: "2"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_8_drink_2 }
+      # --- Platz 9 ---
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_9
+                state: "on"
               - condition: state
                 entity_id: select.barbot_3000_barbot_slot_9_config
-                state: "-1"
-        then:
-          - service: counter.increment
-            target: { entity_id: counter.barbot_platz_9 }
-      # Platz 10
-      - if:
-          - condition: state
-            entity_id: binary_sensor.barbot_3000_barbot_glas_10
-            state: "on"
-          - condition: not
-            conditions:
+                state: "0"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_9_drink_0 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_9
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_9_config
+                state: "1"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_9_drink_1 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_9
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_9_config
+                state: "2"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_9_drink_2 }
+      # --- Platz 10 ---
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_10
+                state: "on"
               - condition: state
                 entity_id: select.barbot_3000_barbot_slot_10_config
-                state: "-1"
-        then:
-          - service: counter.increment
-            target: { entity_id: counter.barbot_platz_10 }
-      # Platz 11
-      - if:
-          - condition: state
-            entity_id: binary_sensor.barbot_3000_barbot_glas_11
-            state: "on"
-          - condition: not
-            conditions:
+                state: "0"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_10_drink_0 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_10
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_10_config
+                state: "1"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_10_drink_1 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_10
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_10_config
+                state: "2"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_10_drink_2 }
+      # --- Platz 11 ---
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_11
+                state: "on"
               - condition: state
                 entity_id: select.barbot_3000_barbot_slot_11_config
-                state: "-1"
-        then:
-          - service: counter.increment
-            target: { entity_id: counter.barbot_platz_11 }
-      # Platz 12
-      - if:
-          - condition: state
-            entity_id: binary_sensor.barbot_3000_barbot_glas_12
-            state: "on"
-          - condition: not
-            conditions:
+                state: "0"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_11_drink_0 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_11
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_11_config
+                state: "1"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_11_drink_1 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_11
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_11_config
+                state: "2"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_11_drink_2 }
+      # --- Platz 12 ---
+      - choose:
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_12
+                state: "on"
               - condition: state
                 entity_id: select.barbot_3000_barbot_slot_12_config
-                state: "-1"
-        then:
-          - service: counter.increment
-            target: { entity_id: counter.barbot_platz_12 }
+                state: "0"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_12_drink_0 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_12
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_12_config
+                state: "1"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_12_drink_1 }
+          - conditions:
+              - condition: state
+                entity_id: binary_sensor.barbot_3000_barbot_glas_12
+                state: "on"
+              - condition: state
+                entity_id: select.barbot_3000_barbot_slot_12_config
+                state: "2"
+            sequence:
+              - service: counter.increment
+                target: { entity_id: counter.barbot_platz_12_drink_2 }
 
-  # Alle Zähler auf 0 zurücksetzen (z.B. vor einer neuen Party)
+  # Reset aller 36 Zähler
   - id: "barbot_reset_stats"
     alias: "BarBot – Statistik zurücksetzen"
-    description: "Wird manuell ausgelöst oder per Button-Karte"
-    trigger: []   # kein automatischer Trigger – nur manuell / via Script
+    trigger: []
     action:
       - service: counter.reset
         target:
           entity_id:
-            - counter.barbot_platz_1
-            - counter.barbot_platz_2
-            - counter.barbot_platz_3
-            - counter.barbot_platz_4
-            - counter.barbot_platz_5
-            - counter.barbot_platz_6
-            - counter.barbot_platz_7
-            - counter.barbot_platz_8
-            - counter.barbot_platz_9
-            - counter.barbot_platz_10
-            - counter.barbot_platz_11
-            - counter.barbot_platz_12
+            - counter.barbot_platz_1_drink_0
+            - counter.barbot_platz_1_drink_1
+            - counter.barbot_platz_1_drink_2
+            - counter.barbot_platz_2_drink_0
+            - counter.barbot_platz_2_drink_1
+            - counter.barbot_platz_2_drink_2
+            - counter.barbot_platz_3_drink_0
+            - counter.barbot_platz_3_drink_1
+            - counter.barbot_platz_3_drink_2
+            - counter.barbot_platz_4_drink_0
+            - counter.barbot_platz_4_drink_1
+            - counter.barbot_platz_4_drink_2
+            - counter.barbot_platz_5_drink_0
+            - counter.barbot_platz_5_drink_1
+            - counter.barbot_platz_5_drink_2
+            - counter.barbot_platz_6_drink_0
+            - counter.barbot_platz_6_drink_1
+            - counter.barbot_platz_6_drink_2
+            - counter.barbot_platz_7_drink_0
+            - counter.barbot_platz_7_drink_1
+            - counter.barbot_platz_7_drink_2
+            - counter.barbot_platz_8_drink_0
+            - counter.barbot_platz_8_drink_1
+            - counter.barbot_platz_8_drink_2
+            - counter.barbot_platz_9_drink_0
+            - counter.barbot_platz_9_drink_1
+            - counter.barbot_platz_9_drink_2
+            - counter.barbot_platz_10_drink_0
+            - counter.barbot_platz_10_drink_1
+            - counter.barbot_platz_10_drink_2
+            - counter.barbot_platz_11_drink_0
+            - counter.barbot_platz_11_drink_1
+            - counter.barbot_platz_11_drink_2
+            - counter.barbot_platz_12_drink_0
+            - counter.barbot_platz_12_drink_1
+            - counter.barbot_platz_12_drink_2
+
 
 # =============================================================================
-# 3) LOVELACE DASHBOARD KARTE
-#    → Inhalt in lovelace_karte.yaml (diese Datei NICHT in configuration.yaml
-#      einbinden – nur zum Kopieren in Lovelace → Karte → Manuell)
+# 3) LOVELACE KARTEN → siehe lovelace_karte.yaml
 # =============================================================================
