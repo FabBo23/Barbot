@@ -62,12 +62,12 @@ automation:
       # Platz 1 (barbot/glass/0 → binary_sensor.barbot_glas_1)
       - if:
           - condition: state
-            entity_id: binary_sensor.barbot_glas_1
+            entity_id: binary_sensor.barbot_3000_barbot_glas_1
             state: "on"
           - condition: not
             conditions:
               - condition: state
-                entity_id: select.barbot_slot_1_config
+                entity_id: select.barbot_3000_barbot_slot_1_config
                 state: "-1"
         then:
           - service: counter.increment
@@ -75,12 +75,12 @@ automation:
       # Platz 2
       - if:
           - condition: state
-            entity_id: binary_sensor.barbot_glas_2
+            entity_id: binary_sensor.barbot_3000_barbot_glas_2
             state: "on"
           - condition: not
             conditions:
               - condition: state
-                entity_id: select.barbot_slot_2_config
+                entity_id: select.barbot_3000_barbot_slot_2_config
                 state: "-1"
         then:
           - service: counter.increment
@@ -88,12 +88,12 @@ automation:
       # Platz 3
       - if:
           - condition: state
-            entity_id: binary_sensor.barbot_glas_3
+            entity_id: binary_sensor.barbot_3000_barbot_glas_3
             state: "on"
           - condition: not
             conditions:
               - condition: state
-                entity_id: select.barbot_slot_3_config
+                entity_id: select.barbot_3000_barbot_slot_3_config
                 state: "-1"
         then:
           - service: counter.increment
@@ -101,12 +101,12 @@ automation:
       # Platz 4
       - if:
           - condition: state
-            entity_id: binary_sensor.barbot_glas_4
+            entity_id: binary_sensor.barbot_3000_barbot_glas_4
             state: "on"
           - condition: not
             conditions:
               - condition: state
-                entity_id: select.barbot_slot_4_config
+                entity_id: select.barbot_3000_barbot_slot_4_config
                 state: "-1"
         then:
           - service: counter.increment
@@ -114,12 +114,12 @@ automation:
       # Platz 5
       - if:
           - condition: state
-            entity_id: binary_sensor.barbot_glas_5
+            entity_id: binary_sensor.barbot_3000_barbot_glas_5
             state: "on"
           - condition: not
             conditions:
               - condition: state
-                entity_id: select.barbot_slot_5_config
+                entity_id: select.barbot_3000_barbot_slot_5_config
                 state: "-1"
         then:
           - service: counter.increment
@@ -127,12 +127,12 @@ automation:
       # Platz 6
       - if:
           - condition: state
-            entity_id: binary_sensor.barbot_glas_6
+            entity_id: binary_sensor.barbot_3000_barbot_glas_6
             state: "on"
           - condition: not
             conditions:
               - condition: state
-                entity_id: select.barbot_slot_6_config
+                entity_id: select.barbot_3000_barbot_slot_6_config
                 state: "-1"
         then:
           - service: counter.increment
@@ -140,12 +140,12 @@ automation:
       # Platz 7
       - if:
           - condition: state
-            entity_id: binary_sensor.barbot_glas_7
+            entity_id: binary_sensor.barbot_3000_barbot_glas_7
             state: "on"
           - condition: not
             conditions:
               - condition: state
-                entity_id: select.barbot_slot_7_config
+                entity_id: select.barbot_3000_barbot_slot_7_config
                 state: "-1"
         then:
           - service: counter.increment
@@ -153,12 +153,12 @@ automation:
       # Platz 8
       - if:
           - condition: state
-            entity_id: binary_sensor.barbot_glas_8
+            entity_id: binary_sensor.barbot_3000_barbot_glas_8
             state: "on"
           - condition: not
             conditions:
               - condition: state
-                entity_id: select.barbot_slot_8_config
+                entity_id: select.barbot_3000_barbot_slot_8_config
                 state: "-1"
         then:
           - service: counter.increment
@@ -166,12 +166,12 @@ automation:
       # Platz 9
       - if:
           - condition: state
-            entity_id: binary_sensor.barbot_glas_9
+            entity_id: binary_sensor.barbot_3000_barbot_glas_9
             state: "on"
           - condition: not
             conditions:
               - condition: state
-                entity_id: select.barbot_slot_9_config
+                entity_id: select.barbot_3000_barbot_slot_9_config
                 state: "-1"
         then:
           - service: counter.increment
@@ -179,12 +179,12 @@ automation:
       # Platz 10
       - if:
           - condition: state
-            entity_id: binary_sensor.barbot_glas_10
+            entity_id: binary_sensor.barbot_3000_barbot_glas_10
             state: "on"
           - condition: not
             conditions:
               - condition: state
-                entity_id: select.barbot_slot_10_config
+                entity_id: select.barbot_3000_barbot_slot_10_config
                 state: "-1"
         then:
           - service: counter.increment
@@ -192,12 +192,12 @@ automation:
       # Platz 11
       - if:
           - condition: state
-            entity_id: binary_sensor.barbot_glas_11
+            entity_id: binary_sensor.barbot_3000_barbot_glas_11
             state: "on"
           - condition: not
             conditions:
               - condition: state
-                entity_id: select.barbot_slot_11_config
+                entity_id: select.barbot_3000_barbot_slot_11_config
                 state: "-1"
         then:
           - service: counter.increment
@@ -205,12 +205,12 @@ automation:
       # Platz 12
       - if:
           - condition: state
-            entity_id: binary_sensor.barbot_glas_12
+            entity_id: binary_sensor.barbot_3000_barbot_glas_12
             state: "on"
           - condition: not
             conditions:
               - condition: state
-                entity_id: select.barbot_slot_12_config
+                entity_id: select.barbot_3000_barbot_slot_12_config
                 state: "-1"
         then:
           - service: counter.increment

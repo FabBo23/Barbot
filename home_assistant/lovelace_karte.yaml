@@ -4,34 +4,45 @@
 # Diese Datei NICHT in configuration.yaml einbinden!
 # Inhalt in Lovelace → Karte hinzufügen → Manuell einfügen.
 #
-# Benötigt: counter.barbot_platz_1..12 aus barbot_statistik.yaml
+# Entity-IDs prüfen: HA → Entwicklerwerkzeuge → Zustände
+#   Suche nach: barbot_3000
+#
+# Getränke-Namen (text.*): exakte IDs in Entwicklerwerkzeuge prüfen,
+#   z.B. text.barbot_3000_barbot_getrank_1_blau  (ä→a, Klammern entfernt)
+#   und unten in der Liste anpassen.
 # =============================================================================
 
 
 # --- KARTE 1: Statistik-Tabelle ---
-# In Lovelace → Dashboard → Karte hinzufügen → Manuell → diesen Block einfügen:
+# In Lovelace → Dashboard → Karte hinzufügen → Manuell → DIESEN Block einfügen
+# (nur den Block ab "type:", nicht die Kommentare):
 
 type: markdown
-title: "\U0001F377 BarBot Statistik"
-content: >
+title: "🍷 BarBot Statistik"
+content: |
+  {%- set drink_e = [
+    'text.barbot_3000_barbot_getrank_1_blau',
+    'text.barbot_3000_barbot_getrank_2_rot',
+    'text.barbot_3000_barbot_getrank_3_gelb'
+  ] -%}
   {%- set drinks = [
-    states('text.barbot_getrank_1_blau'),
-    states('text.barbot_getrank_2_rot'),
-    states('text.barbot_getrank_3_gelb')
+    states(drink_e[0]),
+    states(drink_e[1]),
+    states(drink_e[2])
   ] -%}
   {%- set slots = [
-    states('select.barbot_slot_1_config')  | int(-1),
-    states('select.barbot_slot_2_config')  | int(-1),
-    states('select.barbot_slot_3_config')  | int(-1),
-    states('select.barbot_slot_4_config')  | int(-1),
-    states('select.barbot_slot_5_config')  | int(-1),
-    states('select.barbot_slot_6_config')  | int(-1),
-    states('select.barbot_slot_7_config')  | int(-1),
-    states('select.barbot_slot_8_config')  | int(-1),
-    states('select.barbot_slot_9_config')  | int(-1),
-    states('select.barbot_slot_10_config') | int(-1),
-    states('select.barbot_slot_11_config') | int(-1),
-    states('select.barbot_slot_12_config') | int(-1)
+    states('select.barbot_3000_barbot_slot_1_config')  | int(-1),
+    states('select.barbot_3000_barbot_slot_2_config')  | int(-1),
+    states('select.barbot_3000_barbot_slot_3_config')  | int(-1),
+    states('select.barbot_3000_barbot_slot_4_config')  | int(-1),
+    states('select.barbot_3000_barbot_slot_5_config')  | int(-1),
+    states('select.barbot_3000_barbot_slot_6_config')  | int(-1),
+    states('select.barbot_3000_barbot_slot_7_config')  | int(-1),
+    states('select.barbot_3000_barbot_slot_8_config')  | int(-1),
+    states('select.barbot_3000_barbot_slot_9_config')  | int(-1),
+    states('select.barbot_3000_barbot_slot_10_config') | int(-1),
+    states('select.barbot_3000_barbot_slot_11_config') | int(-1),
+    states('select.barbot_3000_barbot_slot_12_config') | int(-1)
   ] -%}
   {%- set counts = [
     states('counter.barbot_platz_1')  | int(0),
@@ -47,29 +58,29 @@ content: >
     states('counter.barbot_platz_11') | int(0),
     states('counter.barbot_platz_12') | int(0)
   ] -%}
-  {%- set max_count = [counts | max, 1] | max -%}
-  {%- set icons = ["\U0001F535", "\U0001F534", "\U0001F7E1"] -%}
-  {%- set total = counts | sum -%}
-
-  | Platz | Getränk | Anzahl | |
-  |:-----:|---------|:------:|-|
+  {%- set icons  = ['🔵','🔴','🟡'] -%}
+  {%- set max_c  = [counts | max, 1] | max -%}
+  {%- set total  = counts | sum -%}
+  {%- set ns = namespace(rows='') -%}
   {%- for i in range(12) -%}
-    {%- set di = slots[i] -%}
-    {%- set name = drinks[di] if di >= 0 and di < 3 else '—' -%}
-    {%- set icon = icons[di] if di >= 0 and di < 3 else '⬜' -%}
-    {%- set c = counts[i] -%}
-    {%- set bar_len = ((c / max_count) * 10) | round | int -%}
-    {%- set bar = '█' * bar_len + '░' * (10 - bar_len) -%}
-  | **{{ i+1 }}** | {{ icon }} {{ name }} | {{ c }}x | `{{ bar }}` |
-  {%- endfor %}
-
+    {%- set di   = slots[i] -%}
+    {%- set name = drinks[di] if (di >= 0 and di < 3) else '—' -%}
+    {%- set icon = icons[di]  if (di >= 0 and di < 3) else '⬜' -%}
+    {%- set c    = counts[i] -%}
+    {%- set blen = ((c / max_c) * 8) | round | int -%}
+    {%- set bar  = '█' * blen + '░' * (8 - blen) -%}
+    {%- set ns.rows = ns.rows + '| **' + (i+1)|string + '** | ' + icon + ' ' + name + ' | ' + c|string + 'x | `' + bar + '` |\n' -%}
+  {%- endfor -%}
+  | Platz | Getränk | Anzahl | |
+  |:-----:|---------|:------:|---|
+  {{ ns.rows }}
   ---
-  **Gesamt:** {{ total }} Schnäpse &nbsp;|&nbsp; {{ now().strftime('%d.%m. %H:%M') }}
+  **Gesamt:** {{ total }} Schnäpse &nbsp;·&nbsp; {{ now().strftime('%d.%m. %H:%M') }}
 
 
 # =============================================================================
 # --- KARTE 2: Reset-Button ---
-# Zweite Karte – separat in Lovelace einfügen:
+# Separat als zweite Karte in Lovelace einfügen:
 # =============================================================================
 
 type: button
