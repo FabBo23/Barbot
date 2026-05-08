@@ -1,0 +1,84 @@
+# =============================================================================
+# BarBot Statistik – Lovelace Karten
+# =============================================================================
+# Diese Datei NICHT in configuration.yaml einbinden!
+# Inhalt in Lovelace → Karte hinzufügen → Manuell einfügen.
+#
+# Benötigt: counter.barbot_platz_1..12 aus barbot_statistik.yaml
+# =============================================================================
+
+
+# --- KARTE 1: Statistik-Tabelle ---
+# In Lovelace → Dashboard → Karte hinzufügen → Manuell → diesen Block einfügen:
+
+type: markdown
+title: "\U0001F377 BarBot Statistik"
+content: >
+  {%- set drinks = [
+    states('text.barbot_getrank_1_blau'),
+    states('text.barbot_getrank_2_rot'),
+    states('text.barbot_getrank_3_gelb')
+  ] -%}
+  {%- set slots = [
+    states('select.barbot_slot_1_config')  | int(-1),
+    states('select.barbot_slot_2_config')  | int(-1),
+    states('select.barbot_slot_3_config')  | int(-1),
+    states('select.barbot_slot_4_config')  | int(-1),
+    states('select.barbot_slot_5_config')  | int(-1),
+    states('select.barbot_slot_6_config')  | int(-1),
+    states('select.barbot_slot_7_config')  | int(-1),
+    states('select.barbot_slot_8_config')  | int(-1),
+    states('select.barbot_slot_9_config')  | int(-1),
+    states('select.barbot_slot_10_config') | int(-1),
+    states('select.barbot_slot_11_config') | int(-1),
+    states('select.barbot_slot_12_config') | int(-1)
+  ] -%}
+  {%- set counts = [
+    states('counter.barbot_platz_1')  | int(0),
+    states('counter.barbot_platz_2')  | int(0),
+    states('counter.barbot_platz_3')  | int(0),
+    states('counter.barbot_platz_4')  | int(0),
+    states('counter.barbot_platz_5')  | int(0),
+    states('counter.barbot_platz_6')  | int(0),
+    states('counter.barbot_platz_7')  | int(0),
+    states('counter.barbot_platz_8')  | int(0),
+    states('counter.barbot_platz_9')  | int(0),
+    states('counter.barbot_platz_10') | int(0),
+    states('counter.barbot_platz_11') | int(0),
+    states('counter.barbot_platz_12') | int(0)
+  ] -%}
+  {%- set max_count = [counts | max, 1] | max -%}
+  {%- set icons = ["\U0001F535", "\U0001F534", "\U0001F7E1"] -%}
+  {%- set total = counts | sum -%}
+
+  | Platz | Getränk | Anzahl | |
+  |:-----:|---------|:------:|-|
+  {%- for i in range(12) -%}
+    {%- set di = slots[i] -%}
+    {%- set name = drinks[di] if di >= 0 and di < 3 else '—' -%}
+    {%- set icon = icons[di] if di >= 0 and di < 3 else '⬜' -%}
+    {%- set c = counts[i] -%}
+    {%- set bar_len = ((c / max_count) * 10) | round | int -%}
+    {%- set bar = '█' * bar_len + '░' * (10 - bar_len) -%}
+  | **{{ i+1 }}** | {{ icon }} {{ name }} | {{ c }}x | `{{ bar }}` |
+  {%- endfor %}
+
+  ---
+  **Gesamt:** {{ total }} Schnäpse &nbsp;|&nbsp; {{ now().strftime('%d.%m. %H:%M') }}
+
+
+# =============================================================================
+# --- KARTE 2: Reset-Button ---
+# Zweite Karte – separat in Lovelace einfügen:
+# =============================================================================
+
+type: button
+name: Statistik zurücksetzen
+icon: mdi:refresh
+confirm:
+  text: Alle Zähler wirklich auf 0 setzen?
+tap_action:
+  action: call-service
+  service: automation.trigger
+  service_data:
+    entity_id: automation.barbot_statistik_zurucksetzen
