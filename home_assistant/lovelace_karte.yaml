@@ -67,12 +67,10 @@ content: |
     {%- set name = drinks[di] if (di >= 0 and di < 3) else '—' -%}
     {%- set icon = icons[di]  if (di >= 0 and di < 3) else '⬜' -%}
     {%- set c    = counts[i] -%}
-    {%- set blen = ((c / max_c) * 8) | round | int -%}
-    {%- set bar  = '█' * blen + '░' * (8 - blen) -%}
-    {%- set ns.rows = ns.rows + '| **' + (i+1)|string + '** | ' + icon + ' ' + name + ' | ' + c|string + 'x | `' + bar + '` |\n' -%}
+    {%- set ns.rows = ns.rows + '| **' + (i+1)|string + '** | ' + icon + ' ' + name + ' | **' + c|string + 'x** |\n' -%}
   {%- endfor -%}
-  | Platz | Getränk | Anzahl | |
-  |:-----:|---------|:------:|---|
+  | Platz | Getränk | Anzahl |
+  |:-----:|---------|:------:|
   {{ ns.rows }}
   ---
   **Gesamt:** {{ total }} Schnäpse &nbsp;·&nbsp; {{ now().strftime('%d.%m. %H:%M') }}
