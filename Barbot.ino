@@ -731,6 +731,7 @@ void loop() {
       bot.stopPump(drinkForThisSlot);
 
       bot.addDispensed(drinkForThisSlot, (int)roundf(bot.pourTimeMs * 10.0f / bot.msPerCl));
+      bot.addSlotPour(i, drinkForThisSlot);
       filledSlots[i] = true;
       // Warnung erst NACH Abschluss der ganzen Sequenz prüfen,
       // damit Fortschrittsseite (p2) nicht überschrieben wird
