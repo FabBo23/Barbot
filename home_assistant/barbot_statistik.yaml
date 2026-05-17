@@ -1,0 +1,49 @@
+# =============================================================================
+# BarBot – Getränke-Statistik pro Stellplatz (robust gegen Netzwerkausfall)
+# =============================================================================
+#
+# WICHTIG: Die Zählung passiert jetzt im BarBot selbst (firmwareseitig,
+# in NVS gespeichert). Der BarBot publiziert den kompletten Stand als
+# RETAINED Topic "barbot/stats". HA spiegelt nur noch – fällt während
+# des Ausschanks die Verbindung aus, kommt nach dem Reconnect
+# automatisch der korrekte Stand.
+#
+# → Keine counter-Helfer mehr, keine Automation mehr nötig!
+#   Die alten 36 counter.barbot_platz_* darfst du in HA löschen.
+#
+# Diesen Block in deine bestehende "mqtt:" Sektion einfügen
+# (dort wo auch button:/sensor:/binary_sensor: stehen, unter sensor:).
+# =============================================================================
+
+mqtt:
+  sensor:
+    - name: "BarBot Statistik"
+      unique_id: "barbot_stats"
+      state_topic: "barbot/stats"
+      value_template: "{{ value_json.total }}"
+      json_attributes_topic: "barbot/stats"
+      unit_of_measurement: "Schnäpse"
+      icon: "mdi:chart-bar"
+      device:
+        identifiers: ["barbot_3000_device"]
+        name: "BarBot 3000"
+
+
+# =============================================================================
+# RESET-SKRIPT (optional – in configuration.yaml unter "script:" oder via UI)
+# Sendet barbot/cmd = "resetstats" → BarBot setzt alle Zähler in NVS auf 0
+# =============================================================================
+
+script:
+  barbot_statistik_reset:
+    alias: "BarBot Statistik zurücksetzen"
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "barbot/cmd"
+          payload: "resetstats"
+
+
+# =============================================================================
+# LOVELACE KARTEN → siehe lovelace_karte.yaml
+# =============================================================================

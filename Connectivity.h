@@ -55,6 +55,7 @@ class Connectivity {
         char drinkNames[3][33];
         int dispensedMl[3];
         int bottleSizeMl[3];
+        int slotPourCount[12][3];
     } cache;
 
     StateCache lastSentCache;
@@ -83,6 +84,7 @@ class Connectivity {
         char drinkNames[3][33];
         int dispensedMl[3];
         int bottleSizeMl[3];
+        int slotPourCount[12][3];
         bool initialized;
     } mqttSent;
 
@@ -339,6 +341,7 @@ class Connectivity {
                   cache.dispensedMl[i]   = bot->dispensedMl[i];
                   cache.bottleSizeMl[i]  = bot->bottleSizeMl[i];
               }
+              memcpy(cache.slotPourCount, bot->slotPourCount, sizeof(cache.slotPourCount));
               xSemaphoreGive(botMutex);
           }
       }
@@ -878,6 +881,49 @@ class Connectivity {
               request->redirect("/");
       });
 
+      // --- Pour-Statistik pro Platz/Getränk ---
+      server.on("/api/stats", HTTP_GET, [this](AsyncWebServerRequest *request){
+          String res = "{\"names\":[";
+          long total = 0;
+          if(xSemaphoreTake(botMutex, pdMS_TO_TICKS(50))) {
+              for(int d = 0; d < 3; d++) {
+                  res += "\"" + bot->drinkNames[d] + "\"";
+                  if(d < 2) res += ",";
+              }
+              res += "],\"matrix\":[";
+              for(int s = 0; s < 12; s++) {
+                  res += "[";
+                  for(int d = 0; d < 3; d++) {
+                      res += String(bot->slotPourCount[s][d]);
+                      total += bot->slotPourCount[s][d];
+                      if(d < 2) res += ",";
+                  }
+                  res += "]";
+                  if(s < 11) res += ",";
+              }
+              xSemaphoreGive(botMutex);
+          } else {
+              res += "],\"matrix\":[";
+          }
+          res += "],\"total\":" + String(total) + "}";
+          request->send(200, "application/json", res);
+      });
+
+      server.on("/api/resetStats", HTTP_GET, [this](AsyncWebServerRequest *request){
+          if(xSemaphoreTake(botMutex, pdMS_TO_TICKS(100))) {
+              bot->resetStats();
+              xSemaphoreGive(botMutex);
+          }
+          request->send(200, "text/plain", "OK");
+      });
+
+      server.on("/stats", HTTP_GET, [](AsyncWebServerRequest *request){
+          if(LittleFS.exists("/stats.html"))
+              request->send(LittleFS, "/stats.html", "text/html");
+          else
+              request->redirect("/");
+      });
+
       server.on("/api/setAll", HTTP_GET, [this](AsyncWebServerRequest *request){
         if(request->hasParam("val")) {
             int val = request->getParam("val")->value().toInt();
@@ -1051,9 +1097,15 @@ class Connectivity {
         
         String top = String(topic); 
 
-        if(top == "barbot/cmd") { 
-            if(strcmp(msg, "start") == 0) shouldStart = true; 
-            if(strcmp(msg, "stop") == 0) shouldStop = true; 
+        if(top == "barbot/cmd") {
+            if(strcmp(msg, "start") == 0) shouldStart = true;
+            if(strcmp(msg, "stop") == 0) shouldStop = true;
+            if(strcmp(msg, "resetstats") == 0) {
+                if(xSemaphoreTake(botMutex, pdMS_TO_TICKS(50))) {
+                    bot->resetStats();
+                    xSemaphoreGive(botMutex);
+                }
+            }
         }
         else if(top.startsWith("barbot/slot/")) {
              int start = top.indexOf("/slot/") + 6;
@@ -1170,6 +1222,29 @@ class Connectivity {
                 itoa(cache.bottleSizeMl[i], val, 10);
                 client.publish(topic, val, true);
             }
+        }
+
+        // Pour-Statistik als retained JSON. Retained = HA bekommt nach
+        // jedem Reconnect automatisch den aktuellen Stand, auch wenn
+        // während des Ausschanks die Verbindung weg war.
+        if(forceAll || memcmp(cache.slotPourCount, mqttSent.slotPourCount,
+                              sizeof(cache.slotPourCount)) != 0) {
+            memcpy(mqttSent.slotPourCount, cache.slotPourCount,
+                   sizeof(mqttSent.slotPourCount));
+            String json = "{\"matrix\":[";
+            long total = 0;
+            for(int s = 0; s < 12; s++) {
+                json += "[";
+                for(int d = 0; d < 3; d++) {
+                    json += String(cache.slotPourCount[s][d]);
+                    total += cache.slotPourCount[s][d];
+                    if(d < 2) json += ",";
+                }
+                json += "]";
+                if(s < 11) json += ",";
+            }
+            json += "],\"total\":" + String(total) + "}";
+            client.publish("barbot/stats", json.c_str(), true);
         }
     }
 

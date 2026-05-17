@@ -1,0 +1,64 @@
+# =============================================================================
+# BarBot Statistik – Lovelace Karten
+# =============================================================================
+# NICHT in configuration.yaml einbinden!
+# Karte 1 + Karte 2 jeweils separat in Lovelace → Karte → Manuell einfügen.
+#
+# Liest sensor.barbot_statistik (Attribut "matrix") – kommt direkt vom
+# BarBot per retained MQTT. Keine counter/automation nötig.
+#
+# Getränke-Namen kommen aus den text.* Entities. Falls die IDs bei dir
+# anders heißen: Entwicklerwerkzeuge → Zustände → "barbot_3000" prüfen.
+# =============================================================================
+
+
+# =============================================================================
+# KARTE 1: Statistik-Tabelle  (ab "type:" einfügen)
+# =============================================================================
+
+type: markdown
+title: "🍷 BarBot Statistik"
+content: |
+  {%- set m = state_attr('sensor.barbot_statistik','matrix') -%}
+  {%- if m is none -%}
+  _Warte auf Daten vom BarBot…_
+  {%- else -%}
+  {%- set dn = [
+    states('text.barbot_3000_barbot_getrank_1_blau') | default('Getränk 1', true),
+    states('text.barbot_3000_barbot_getrank_2_rot')  | default('Getränk 2', true),
+    states('text.barbot_3000_barbot_getrank_3_gelb') | default('Getränk 3', true)
+  ] -%}
+  {%- set ic = ['🔵','🔴','🟡'] -%}
+  {%- set ns = namespace(out='', t0=0, t1=0, t2=0, total=0) -%}
+  {%- set ns.out = '| Platz | ' + ic[0] + ' ' + dn[0] + ' | ' + ic[1] + ' ' + dn[1] + ' | ' + ic[2] + ' ' + dn[2] + ' | Gesamt |\n' -%}
+  {%- set ns.out = ns.out + '|:-----:|:---:|:---:|:---:|:---:|\n' -%}
+  {%- for i in range(12) -%}
+    {%- set d0 = m[i][0] -%}
+    {%- set d1 = m[i][1] -%}
+    {%- set d2 = m[i][2] -%}
+    {%- set t  = d0 + d1 + d2 -%}
+    {%- set ns.t0 = ns.t0 + d0 -%}
+    {%- set ns.t1 = ns.t1 + d1 -%}
+    {%- set ns.t2 = ns.t2 + d2 -%}
+    {%- set ns.total = ns.total + t -%}
+    {%- set ns.out = ns.out + '| **' + (i+1)|string + '** | ' + d0|string + 'x | ' + d1|string + 'x | ' + d2|string + 'x | **' + t|string + 'x** |\n' -%}
+  {%- endfor -%}
+  {%- set ns.out = ns.out + '| **∑** | **' + ns.t0|string + 'x** | **' + ns.t1|string + 'x** | **' + ns.t2|string + 'x** | **' + ns.total|string + 'x** |\n' -%}
+  {{ ns.out }}
+  ---
+  {{ now().strftime('%d.%m.%Y %H:%M') }}
+  {%- endif -%}
+
+
+# =============================================================================
+# KARTE 2: Reset-Button  (separat als zweite Karte einfügen)
+# =============================================================================
+
+type: button
+name: Statistik zurücksetzen
+icon: mdi:refresh
+confirm:
+  text: Alle Zähler im BarBot wirklich auf 0 setzen?
+tap_action:
+  action: call-service
+  service: script.barbot_statistik_reset

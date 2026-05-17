@@ -91,8 +91,13 @@ class DrinkMachine {
     int bottleSizeMl[3] = {700, 700, 700};  // Flaschengröße in ml
     int dispensedMl[3]  = {0,   0,   0};    // Ausgegossene Menge in ml
 
+    // Pour-Statistik pro Platz und Getränk (persistent über NVS)
+    // slotPourCount[Platz 0-11][Getränk 0-2]
+    int slotPourCount[12][3];
+
   DrinkMachine() : leds(NUM_LEDS, PIN_LEDS, NEO_GRB + NEO_KHZ800) {
       for (int i = 0; i < 12; i++) slotConfig[i] = 0;
+      memset(slotPourCount, 0, sizeof(slotPourCount));
     }
 
     // -------------------------------------------------------------------------
@@ -116,6 +121,10 @@ class DrinkMachine {
       dispensedMl[0]  = prefs.getInt("dis0",  0);
       dispensedMl[1]  = prefs.getInt("dis1",  0);
       dispensedMl[2]  = prefs.getInt("dis2",  0);
+      if (prefs.getBytesLength("slotstats") == sizeof(slotPourCount))
+        prefs.getBytes("slotstats", slotPourCount, sizeof(slotPourCount));
+      else
+        memset(slotPourCount, 0, sizeof(slotPourCount));
       prefs.end();
 
       // UART zum Display initialisieren
@@ -239,6 +248,23 @@ class DrinkMachine {
       bottleSizeMl[drinkIdx] = ml;
       prefs.begin("barbot", false);
       prefs.putInt(("btl" + String(drinkIdx)).c_str(), ml);
+      prefs.end();
+    }
+
+    // Zählt einen Ausschank für Platz/Getränk und speichert persistent.
+    // Robust gegen Netzwerkausfall: Zählung passiert im ESP, nicht in HA.
+    void addSlotPour(int slot, int drinkIdx) {
+      if (slot < 0 || slot > 11 || drinkIdx < 0 || drinkIdx > 2) return;
+      slotPourCount[slot][drinkIdx]++;
+      prefs.begin("barbot", false);
+      prefs.putBytes("slotstats", slotPourCount, sizeof(slotPourCount));
+      prefs.end();
+    }
+
+    void resetStats() {
+      memset(slotPourCount, 0, sizeof(slotPourCount));
+      prefs.begin("barbot", false);
+      prefs.putBytes("slotstats", slotPourCount, sizeof(slotPourCount));
       prefs.end();
     }
 
