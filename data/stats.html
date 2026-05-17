@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Statistik – BarBot</title>
+<style>
+  :root{--bg:#0f172a;--card:#1e293b;--acc:#38bdf8;--txt:#f8fafc;--border:#334155;
+        --ok:#10b981;--warn:#f59e0b;--err:#ef4444;
+        --c0:#60a5fa;--c1:#f87171;--c2:#facc15}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--txt);
+       padding:20px;min-height:100vh}
+  .container{max-width:680px;margin:0 auto;padding-bottom:40px}
+  nav{display:flex;flex-wrap:wrap;gap:8px;background:rgba(0,0,0,.2);
+      padding:12px 16px;border-radius:12px;margin-bottom:24px}
+  nav a{color:var(--acc);text-decoration:none;font-weight:600;
+        padding:7px 12px;border-radius:6px;background:rgba(56,189,248,.1);
+        font-size:.9rem;white-space:nowrap}
+  nav a:hover{background:rgba(56,189,248,.2)}
+  h1{text-align:center;margin-bottom:6px}
+  .subtitle{text-align:center;color:#94a3b8;font-size:.875rem;margin-bottom:24px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+        padding:18px;margin-bottom:18px;overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:.92rem}
+  th,td{padding:9px 8px;text-align:center;border-bottom:1px solid var(--border)}
+  th{color:#94a3b8;font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.03em}
+  td:first-child,th:first-child{text-align:left;font-weight:700}
+  tr:last-child td{border-bottom:none}
+  .sum-row td{font-weight:800;color:var(--acc);border-top:2px solid var(--border)}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle}
+  .d0{background:var(--c0)} .d1{background:var(--c1)} .d2{background:var(--c2)}
+  .zero{color:#475569}
+  .total-line{text-align:center;color:#94a3b8;font-size:.9rem;margin:18px 0}
+  .total-line strong{color:var(--txt);font-size:1.3rem}
+  .btn-reset{display:block;width:100%;padding:13px;border:1px solid var(--border);
+             border-radius:10px;background:transparent;color:#94a3b8;font-size:.95rem;
+             font-weight:600;cursor:pointer;transition:all .2s}
+  .btn-reset:hover{background:rgba(239,68,68,.15);border-color:var(--err);color:#f87171}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+         background:#1e293b;border:1px solid var(--border);color:var(--txt);
+         padding:10px 20px;border-radius:8px;font-size:.9rem;display:none;
+         box-shadow:0 4px 20px rgba(0,0,0,.4);z-index:99}
+  .toast.show{display:block}
+</style>
+</head>
+<body>
+<div class="container">
+  <nav>
+    <a href="/">&larr; BarBot</a>
+    <a href="/levels">&#128202; Füllstand</a>
+    <a href="/bottles">&#127868; Flaschen</a>
+    <a href="/settings">&#9881; Settings</a>
+  </nav>
+
+  <h1>&#128202; Getränke-Statistik</h1>
+  <p class="subtitle">Was wurde an jedem Stellplatz getrunken</p>
+
+  <div class="card">
+    <table id="stats-table">
+      <thead><tr><th>Platz</th><th>–</th><th>–</th><th>–</th><th>Gesamt</th></tr></thead>
+      <tbody id="stats-body">
+        <tr><td colspan="5" style="color:#94a3b8;text-align:center">Lade Daten...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="total-line">Gesamt ausgeschenkt: <strong id="grand-total">–</strong> Schnäpse</p>
+
+  <button class="btn-reset" onclick="resetStats()">Statistik zurücksetzen</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ICONS = ['d0','d1','d2'];
+
+function toast(msg, err) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = err ? 'var(--err)' : 'var(--ok)';
+  t.className = 'toast show';
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+function cell(n) {
+  return n > 0 ? (n + 'x') : '<span class="zero">0</span>';
+}
+
+function build(data) {
+  const names = data.names || ['Getränk 1','Getränk 2','Getränk 3'];
+  const m = data.matrix || [];
+
+  // Kopfzeile mit echten Getränkenamen
+  const thead = document.querySelector('#stats-table thead tr');
+  thead.innerHTML = '<th>Platz</th>' +
+    names.map((n,i) => `<th><span class="dot ${ICONS[i]}"></span>${n}</th>`).join('') +
+    '<th>Gesamt</th>';
+
+  const tot = [0,0,0];
+  let rows = '';
+  for(let s = 0; s < 12; s++) {
+    const r = m[s] || [0,0,0];
+    const rowTotal = r[0]+r[1]+r[2];
+    tot[0]+=r[0]; tot[1]+=r[1]; tot[2]+=r[2];
+    rows += `<tr><td>${s+1}</td>` +
+            `<td>${cell(r[0])}</td><td>${cell(r[1])}</td><td>${cell(r[2])}</td>` +
+            `<td><strong>${rowTotal>0?rowTotal+'x':'<span class=\"zero\">0</span>'}</strong></td></tr>`;
+  }
+  rows += `<tr class="sum-row"><td>&#8721;</td>` +
+          `<td>${tot[0]}x</td><td>${tot[1]}x</td><td>${tot[2]}x</td>` +
+          `<td>${tot[0]+tot[1]+tot[2]}x</td></tr>`;
+
+  document.getElementById('stats-body').innerHTML = rows;
+  document.getElementById('grand-total').textContent = data.total ?? (tot[0]+tot[1]+tot[2]);
+}
+
+async function loadData() {
+  try {
+    const r = await fetch('/api/stats');
+    if(!r.ok) throw new Error();
+    build(await r.json());
+  } catch(e) {
+    document.getElementById('stats-body').innerHTML =
+      '<tr><td colspan="5" style="color:#f87171;text-align:center">Fehler beim Laden.</td></tr>';
+  }
+}
+
+async function resetStats() {
+  if(!confirm('Wirklich die komplette Statistik zurücksetzen?\nAlle Zähler werden auf 0 gesetzt.')) return;
+  try {
+    const r = await fetch('/api/resetStats');
+    if(r.ok) { toast('Statistik zurückgesetzt!'); await loadData(); }
+    else      { toast('Fehler beim Zurücksetzen', true); }
+  } catch(e) { toast('Verbindungsfehler', true); }
+}
+
+loadData();
+setInterval(loadData, 15000);
+</script>
+</body>
+</html>

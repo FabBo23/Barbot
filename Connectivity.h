@@ -881,6 +881,49 @@ class Connectivity {
               request->redirect("/");
       });
 
+      // --- Pour-Statistik pro Platz/Getränk ---
+      server.on("/api/stats", HTTP_GET, [this](AsyncWebServerRequest *request){
+          String res = "{\"names\":[";
+          long total = 0;
+          if(xSemaphoreTake(botMutex, pdMS_TO_TICKS(50))) {
+              for(int d = 0; d < 3; d++) {
+                  res += "\"" + bot->drinkNames[d] + "\"";
+                  if(d < 2) res += ",";
+              }
+              res += "],\"matrix\":[";
+              for(int s = 0; s < 12; s++) {
+                  res += "[";
+                  for(int d = 0; d < 3; d++) {
+                      res += String(bot->slotPourCount[s][d]);
+                      total += bot->slotPourCount[s][d];
+                      if(d < 2) res += ",";
+                  }
+                  res += "]";
+                  if(s < 11) res += ",";
+              }
+              xSemaphoreGive(botMutex);
+          } else {
+              res += "],\"matrix\":[";
+          }
+          res += "],\"total\":" + String(total) + "}";
+          request->send(200, "application/json", res);
+      });
+
+      server.on("/api/resetStats", HTTP_GET, [this](AsyncWebServerRequest *request){
+          if(xSemaphoreTake(botMutex, pdMS_TO_TICKS(100))) {
+              bot->resetStats();
+              xSemaphoreGive(botMutex);
+          }
+          request->send(200, "text/plain", "OK");
+      });
+
+      server.on("/stats", HTTP_GET, [](AsyncWebServerRequest *request){
+          if(LittleFS.exists("/stats.html"))
+              request->send(LittleFS, "/stats.html", "text/html");
+          else
+              request->redirect("/");
+      });
+
       server.on("/api/setAll", HTTP_GET, [this](AsyncWebServerRequest *request){
         if(request->hasParam("val")) {
             int val = request->getParam("val")->value().toInt();
